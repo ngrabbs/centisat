@@ -6,6 +6,11 @@ markmap:
 
 ## Hardware
 
+### Communication System
+
+#### Lte Modem
+- [waveshare sim7600](https://www.robotshop.com/products/waveshare-sim7600e-h-4g-communication-module-4g-3g2g-gnss-w-sma-antenna?gad_source=1&gad_campaignid=20145188159&gbraid=0AAAAAD_f_xzfEUoOFrooLPM0XgU1A_9eU&gclid=CjwKCAjw3f_BBhAPEiwAaA3K5MLRexY-H1IyuCo5sJfTYYxPL_CFv4cqR8qHFit6s_-mkg_YquC3YhoCRdQQAvD_BwE)
+
 ### Electrical Power System (EPS)
 
 #### Energy Sources
