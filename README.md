@@ -88,7 +88,7 @@ CeNTiSat/
 ## 📚 Acknowledgments
 
 * Inspired by the emerging field of NTN (Non-Terrestrial Networks)
-* Developed by \[Your University CubeSat Team Name]
+* Developed by \[TBD]
 * Guidance from academic advisors and industry whitepapers on D2C viability
 
 ---
