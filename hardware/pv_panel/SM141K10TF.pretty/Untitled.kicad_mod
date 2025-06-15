@@ -1,0 +1,154 @@
+(footprint "Untitled"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 -0.5 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "08d12ade-11a2-4aba-a9b4-95a1f9a680f3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "Untitled"
+		(at 0 1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "6879bbbc-234d-4de2-86d0-6841ac841ba3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "638cb676-1288-47de-9917-aad265d307fe")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "92e1158d-020d-4a9b-85f1-045fc976abca")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -35 -11.5)
+		(end 35 -11.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "2abecc27-a6cd-4fcd-8ccc-57b0faefd1bb")
+	)
+	(fp_line
+		(start -35 11.5)
+		(end -35 -11.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "e4aee8a2-1df6-402b-ac73-d1c5817d507f")
+	)
+	(fp_line
+		(start 35 -11.5)
+		(end 35 11.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "7577f4e6-7234-4bbb-9fe5-7fc1dbddfbee")
+	)
+	(fp_line
+		(start 35 11.5)
+		(end -35 11.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "ddc712f4-cfc8-49d9-ae13-b231c10bd6a7")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "03ba1816-0f0f-4501-940f-4732cb64bd06")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd circle
+		(at -32 0)
+		(size 3.32 3.32)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "c1d37c61-59c6-4307-9dbb-facc487795cf")
+	)
+	(pad "2" smd circle
+		(at 32 0)
+		(size 3.32 3.32)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "5ae8df38-3d3a-4881-9b81-f16a72530608")
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layer "F.SilkS")
+		(uuid "1fdeb685-6626-44e5-bad2-0ab1332e5449")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads not_allowed)
+			(copperpour allowed)
+			(footprints not_allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy -35 -11.5) (xy 35 -11.5) (xy 35 11.5) (xy -35 11.5)
+			)
+		)
+	)
+	(embedded_fonts no)
+)

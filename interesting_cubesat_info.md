@@ -7,6 +7,11 @@ Below are several well-documented CubeSat projects that provide detailed insight
 ## Enduro Sat
 - **Parts Supplier**
   - Website:[https://www.endurosat.com/products/](https://www.endurosat.com/products/)
+
+## NanoAvionics
+- **Parts Supplier**
+  - Website:[https://nanoavionics.com/cubesat-components/](https://nanoavionics.com/cubesat-components)
+
 ---
 
 ## 1. EQUiSat (Brown University)

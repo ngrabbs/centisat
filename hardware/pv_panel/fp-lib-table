@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "STPS1L40MF")(type "KiCad")(uri "${KIPRJMOD}/STPS1L40MF/footprints.pretty")(options "")(descr ""))
+  (lib (name "SM141K10TF")(type "KiCad")(uri "${KIPRJMOD}/SM141K10TF.pretty")(options "")(descr ""))
+)
