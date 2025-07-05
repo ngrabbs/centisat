@@ -1,4 +1,4 @@
-(footprint "Untitled"
+(footprint "SM141K10TF"
 	(version 20241229)
 	(generator "pcbnew")
 	(generator_version "9.0")
@@ -15,7 +15,7 @@
 			)
 		)
 	)
-	(property "Value" "Untitled"
+	(property "Value" "SM141K10TF"
 		(at 0 1 0)
 		(unlocked yes)
 		(layer "F.Fab")
@@ -115,6 +115,7 @@
 	(pad "2" smd circle
 		(at 32 0)
 		(size 3.32 3.32)
+		(property pad_prop_bga)
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(uuid "5ae8df38-3d3a-4881-9b81-f16a72530608")
 	)
