@@ -1,5 +1,16 @@
 # Testing and Validation Plan
 
+Detailed RF validation procedures are tracked in:
+
+- `test/rf/tx_validation.md`
+- `test/rf/rx_validation.md`
+- `test/rf/spectral_analysis.md`
+
+System-level integration artifacts are tracked in:
+
+- `system/integration/integration_plan.md`
+- `system/integration/system_tests.md`
+
 ## Baseline Validation (Senior Design)
 
 ### Subsystem Bench Testing
