@@ -1,34 +1,49 @@
-# CubeSat Parts Vendors
+# CubeSat Hardware Vendor Survey
 
-## 🔧 Vendors with CAD Files and Datasheets Available
+## Document Purpose
 
-| Vendor                     | Website                                                                                      | Notes                                                                 |
-|----------------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| Pumpkin, Inc.             | [pumpkinspace.com](https://www.pumpkinspace.com/store/p27/CubeSat_Kit™_Cover_Plate_Assembly.html) | CubeSat Kit™ series, openly available datasheets and CAD files        |
-| ISISpace                 | [isispace.nl](https://www.isispace.nl/downloads/)                                            | Full download section with CAD, datasheets, and ICDs                 |
-| AAC Clyde Space           | [aac-clyde.space](https://www.aac-clyde.space/products/cubesats)                             | CAD and datasheets usually available after account creation          |
-| CubeSatShop               | [cubesatshop.com](https://www.cubesatshop.com)                                               | Resells parts from multiple vendors; some datasheets available       |
+This document tracks hardware vendors relevant to student CubeSat development,
+with emphasis on engineering-document access (datasheets, CAD, ICDs,
+integration manuals, and test data).
 
-## 🕵️‍♂️ Vendors Requiring NDA or Inquiry for Technical Files
+## Access Classification
 
-| Vendor                     | Website                                                                 | Notes                                                              |
-|----------------------------|-------------------------------------------------------------------------|--------------------------------------------------------------------|
-| EnduroSat                  | [endurosat.com](https://www.endurosat.com)                              | Requires NDA for CAD and datasheets; good integration documentation |
-| NanoAvionics               | [nanoavionics.com](https://nanoavionics.com)                            | Modular CubeSat buses; files available upon request or NDA          |
-| IQ Spacecom                | [iq-spacecom.com](https://www.iq-spacecom.com)                          | Radio and COM subsystems; documentation access not clearly public   |
+- Public: key engineering documents available without account gating
+- Account/Request: documents are partially available after registration/inquiry
+- NDA/Inquiry: detailed artifacts usually require direct engagement or NDA
 
-## 📦 Additional Vendors
+## Vendors with Public Technical Documentation
 
-| Vendor                     | Website                                                                 | Notes                                                                 |
-|----------------------------|-------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| Blue Canyon Technologies   | [bluecanyontech.com](https://www.bluecanyontech.com)                    | High-performance systems; documentation via inquiry/NDA               |
-| GomSpace                   | [gomspace.com](https://gomspace.com)                                    | Strong documentation base; CAD/files available with account or request |
-| EXA Aerospace              | [exa.ec](https://www.exa.ec)                                            | Specializes in deployables, rad-hard hardware                         |
-| Orbital Transports         | [orbitaltransports.com](https://www.orbitaltransports.com)              | Integration and subsystem supplier                                   |
-| Apogeo Spatial             | [apogeospatial.com](https://apogeospatial.com)                          | Industry aggregator; good source for finding CubeSat vendors          |
-| NearSpace Launch (NSL)     | [nearspacelaunch.com](https://www.nearspacelaunch.com)                  | Sells CubeSat components and hosted payload services                  |
+| Vendor | Website | Typical Access | Primary Use | Notes |
+|---|---|---|---|---|
+| Pumpkin | [pumpkinspace.com](https://www.pumpkinspace.com/store/p27/CubeSat_Kit%E2%84%A2_Cover_Plate_Assembly.html) | Public | Mechanical references | Long-running CubeSat product line |
+| ISISPACE | [isispace.nl](https://www.isispace.nl/downloads/) | Public | ICD and subsystem study | Good source for system-level integration references |
+| AAC Clyde Space | [aac-clyde.space](https://www.aac-clyde.space/products/cubesats) | Account/Request | Bus and subsystem benchmarking | Access varies by product and program phase |
+| CubeSatShop | [cubesatshop.com](https://www.cubesatshop.com) | Mixed | Distributor lookup | Artifact depth depends on original manufacturer |
+| GomSpace | [gomspace.com](https://gomspace.com) | Account/Request | Interface and architecture baseline | Mature ecosystem for comparative trade studies |
 
-## 📸 EnduroSat Structure Reference Images
+## Vendors Commonly Requiring NDA or Direct Inquiry
 
-- ![Assembly](https://www.usu.edu/physics/gas/images/projects/gaspacs/gaspacs-assembling.jpg)
-- ![Flatsat](https://www.usu.edu/physics/gas/images/projects/gaspacs/gaspacs-flatsat.jpg)
+| Vendor | Website | Typical Access | Primary Use | Notes |
+|---|---|---|---|---|
+| EnduroSat | [endurosat.com](https://www.endurosat.com) | NDA/Inquiry | Integration approach comparison | Strong published overview material, detailed files often gated |
+| NanoAvionics | [nanoavionics.com](https://nanoavionics.com) | NDA/Inquiry | Bus-level architecture benchmarking | Detailed interfaces usually controlled |
+| IQ Spacecom | [iq-spacecom.com](https://www.iq-spacecom.com) | Inquiry | Comms subsystem benchmarking | Verify ICD/CAD access before planning around parts |
+| Blue Canyon Technologies | [bluecanyontech.com](https://www.bluecanyontech.com) | Inquiry | High-performance reference point | Primarily targeted to institutional programs |
+
+## Additional Sources and Integrators
+
+| Organization | Website | Role in Research Workflow |
+|---|---|---|
+| EXA Aerospace | [exa.ec](https://www.exa.ec) | Specialized deployables and niche subsystem references |
+| Orbital Transports | [orbitaltransports.com](https://www.orbitaltransports.com) | Integration and hosted-payload ecosystem awareness |
+| Apogeo Spatial | [apogeospatial.com](https://apogeospatial.com) | Vendor discovery and market mapping |
+| NearSpace Launch | [nearspacelaunch.com](https://www.nearspacelaunch.com) | Component and hosted mission options |
+
+## Vendor Evaluation Criteria
+
+1. Documentation completeness: datasheet, CAD, ICD, user guide, test evidence
+2. Interface maturity: electrical and mechanical interface clarity
+3. Program fit: lead time, cost, export constraints, and support responsiveness
+4. Integration risk: dependency on proprietary tooling or gated artifacts
+5. Heritage relevance: flight history and qualification level vs mission needs

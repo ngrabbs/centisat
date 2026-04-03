@@ -2,179 +2,58 @@
 markmap:
   initialExpandLevel: 4
 ---
-# CubeSat
+# CubeSat Hardware Memory Map
 
-## Hardware
+## Document Purpose
 
-### Communication System
+This memory map captures hardware decisions, alternatives, and rationale in a
+single place for design reviews and traceability.
 
-#### Lte Modem
-- [waveshare sim7600](https://www.robotshop.com/products/waveshare-sim7600e-h-4g-communication-module-4g-3g2g-gnss-w-sma-antenna?gad_source=1&gad_campaignid=20145188159&gbraid=0AAAAAD_f_xzfEUoOFrooLPM0XgU1A_9eU&gclid=CjwKCAjw3f_BBhAPEiwAaA3K5MLRexY-H1IyuCo5sJfTYYxPL_CFv4cqR8qHFit6s_-mkg_YquC3YhoCRdQQAvD_BwE)
+## Status Legend
 
-### Electrical Power System (EPS)
+- Selected: baseline component or architecture
+- Candidate: viable option still under evaluation
+- Deferred: valid option intentionally not in current baseline
 
-#### Energy Sources
+## Communications Subsystem
 
-##### Solar Panels
-- ⭐ [SM141K10TF](https://www.digikey.com/en/products/detail/anysolar-ltd/SM141K10TF/14311415)
-  - Monocrystalline, high-efficiency
-  - Vmp ≈ 3.5V/cell
-  - Use 3S or 3S2P configuration for ~10.5V input
+| Item | Status | Role | Reference | Notes |
+|---|---|---|---|---|
+| Discrete amateur-band TX/RX board | Selected | Baseline communications architecture | `hardware/comms/design/overview.md` | UHF downlink and VHF uplink split |
+| RP2040 control path | Selected | Timing, framing, and board control | `hardware/comms/design/overview.md` | Central control for TX/RX sequencing |
+| Si5351A clock generation | Selected | Shared RF clock source | `hardware/comms/design/overview.md` | Used across TX and RX paths |
+| Waveshare SIM7600 modem | Candidate | Exploratory NTN/D2C payload concept | [SIM7600 link](https://www.robotshop.com/products/waveshare-sim7600e-h-4g-communication-module-4g-3g2g-gnss-w-sma-antenna) | Not part of baseline comms architecture |
 
-##### Batteries
-- ⭐ 2S2P 18650 Li-ion
-  - LG MJ1 3500mAh cells
-  - Nominal Voltage: 7.2V
-  - Capacity: ~7000 mAh
-  - Max current: 20A
+## Electrical Power System (EPS)
 
-##### Battery Holder
-- ⭐ 2S2P 18650 battery holder
-  - Allows hot swapping and secure mounting
+| Item | Status | Role | Reference | Notes |
+|---|---|---|---|---|
+| SM141K10TF solar panel | Selected | Primary EPS energy source | [SM141K10TF link](https://www.digikey.com/en/products/detail/anysolar-ltd/SM141K10TF/14311415) | Evaluate final 3S/3S2P implementation against load profile |
+| 2S2P LG MJ1 pack | Selected | Battery storage | `hardware/eps/eps.md` | Protection and balancing details still open |
+| LTC4162 charger | Selected | Charge control with MPPT and telemetry | [LTC4162 link](https://www.digikey.com/en/products/detail/analog-devices-inc/LTC4162EUFD-LADM-PBF/9446107) | Baseline charger path |
+| LTC4162 DC2038A eval board | Selected | Bring-up and validation platform | [DC2038A-A link](https://www.digikey.com/en/products/detail/analog-devices-inc/DC2038A-A/9996133?s=N4IgTCBcDaICIGEwAYDMAOAggWkyAugL5A) | Used for early bench characterization |
+| BQ24650 | Candidate | Simpler charger alternative | `hardware/hardware_vendors.md` | Lower complexity, reduced telemetry |
+| LTC4015 | Candidate | Feature-rich charger alternative | `hardware/hardware_vendors.md` | Higher integration complexity |
+| LT3652 | Deferred | Pseudo-MPPT charger option | `hardware/hardware_vendors.md` | Not preferred for current baseline |
+| TPSM5D1806 module | Selected | Primary buck regulation | [TPSM5D1806 link](https://www.digikey.com/en/products/detail/texas-instruments/TPSM5D1806RDBR/14004345) | Dual rail target for 5 V and 3.3 V buses |
+| TPSM5D1806 EVM | Selected | Regulator validation hardware | [TPSM5D1806EVM link](https://www.digikey.com/en/products/detail/texas-instruments/TPSM5D1806EVM/13563013?s=N4IgTCBcDaICoAUDKBZArAEQIwA4AMAbCALoC%2BQA) | Supports rail and thermal characterization |
+| LM25116, MP2307, TPS5430, TPS62125, AP63205 | Candidate | Regulator alternatives | `hardware/hardware_vendors.md` | Held for trade studies and contingencies |
+| LM2596 | Deferred | Legacy regulator fallback | `hardware/hardware_vendors.md` | Larger footprint and older performance profile |
+| 10k NTC thermistor | Selected | Charge thermal feedback | `hardware/eps/eps.kicad_sch` | Required for robust charging behavior |
+| Inline fuse/polyfuse | Candidate | Input/output protection | `hardware/eps/eps.md` | Final protection architecture pending |
+| Dedicated 2S BMS | Candidate | Battery safety layer | `hardware/eps/eps.md` | Include if needed after integrated safety review |
+| USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/components/eps_phase1_test_plan.md` | Useful for charger register visibility |
+| Adjustable electronic load | Selected | Bench load and transient testing | `hardware/eps/components/eps_phase1_test_plan.md` | Core bring-up instrument |
 
-#### Charging Systems
+## Mechanical and Integration References
 
-##### ⭐ LTC4162 
-- [LTC4162EUFD-LADM#PBF](https://www.digikey.com/en/products/detail/analog-devices-inc/LTC4162EUFD-LADM-PBF/9446107)
-- [DC2038A-A Eval Board](https://www.digikey.com/en/products/detail/analog-devices-inc/DC2038A-A/9996133?s=N4IgTCBcDaICIGEwAYDMAOAggWkyAugL5A)
-- Smart charger with MPPT and I²C telemetry
-- Supports 1–4S Li-ion
-- Pros:
-  - Adaptive MPPT
-  - Full I²C telemetry (voltage, current, health)
-  - JEITA-compliant thermal regulation
-- Cons:
-  - Slightly more complex integration
-  - Needs MCU for config/monitoring
+| Item | Type | Reference | Notes |
+|---|---|---|---|
+| Main 1U structure assembly | CAD reference | [Onshape model](https://cad.onshape.com/documents/f54077faa9eaef25e1f615dc/w/05a52062e76f7bd3695dddef/e/5aa71494ffb6396194e6798c?renderMode=0&uiState=684049080496457e60637a0b) | Integration and envelope checks |
+| 2S2P battery holder | Development aid | [Thingiverse model](https://www.thingiverse.com/thing:456900) | Development and bench packaging reference |
 
-##### BQ24650
-- Standalone Li-ion charger with fixed MPPT
-- Pros: Simple, effective for 2S packs
-- Cons: Manual MPPT voltage tuning, no telemetry
+## Open Items
 
-##### LTC4015
-- Multi-chemistry charger with I²C
-- Pros: Very configurable, fuel gauge support
-- Cons: Higher complexity and cost
-
-##### LT3652
-- Analog charger with input voltage regulation (pseudo-MPPT)
-- Pros: Simple to use, solar-aware
-- Cons: No telemetry, not true MPPT
-
-#### Buck Converters
-
-##### ⭐ TPSM5D1806
-- [TPSM5D1806RDBR](https://www.digikey.com/en/products/detail/texas-instruments/TPSM5D1806RDBR/14004345)
-- [TPSM5D1806EVM Eval Board](https://www.digikey.com/en/products/detail/texas-instruments/TPSM5D1806EVM/13563013?s=N4IgTCBcDaICoAUDKBZArAEQIwA4AMAbCALoC%2BQA)
-- Type: Dual Buck Power Module
-- Input Voltage: 4.5V – 15V
-- Output Voltage: 0.5V – 5.5V (x2)
-- Max Output Current: 6A per rail
-- Switching Frequency: 500 kHz – 1.2 MHz
-- Integrated Inductor: ✅ Yes
-- Efficiency: Up to 95%
-- Ideal Use:
-  - 7.2V battery input
-  - Regulate to 5V and 3.3V
-  - Compact, low-noise CubeSat systems
-
-##### LM25116MHX/NOPB
-- Type: Buck Controller (not a regulator)
-- Input Voltage: 6V – 75V
-- Output Voltage: Configurable
-- Requires external:
-  - Power FETs
-  - Inductor
-  - Diode (optional)
-- Best For:
-  - Custom power buses
-  - High-power rails
-- Notes:
-  - More complex, but space-qualified variants exist
-
-##### MP2307
-- Type: Synchronous Buck Regulator
-- Input Voltage: 4.75V – 23V
-- Output Voltage: Adjustable (typically fixed 5V)
-- Max Current: 3A
-- Efficiency: Good (~90%)
-- Common Use: Quick prototype 5V rail from 2S Li-ion
-
-##### LM2596
-- Type: Classic Buck Regulator
-- Input Voltage: 4V – 40V
-- Output Voltage: Adjustable/fixed (3.3V, 5V, 12V)
-- Max Current: 3A
-- Notes:
-  - Older design
-  - Large module
-  - Moderate efficiency
-
-##### TPS5430
-- Type: Buck Regulator
-- Input Voltage: 5.5V – 36V
-- Output Voltage: Adjustable
-- Max Output Current: 3A
-- Features:
-  - Thermal shutdown
-  - Short-circuit protection
-- Use Case:
-  - Great for 5V rail from 2S battery
-  - More compact than LM2596
-
-##### TPS62125
-- Type: Buck Regulator
-- Input Voltage: 3V – 17V
-- Output Voltage: Adjustable
-- Max Output Current: 300mA
-- Features:
-  - Low quiescent current
-  - Very small footprint (QFN)
-- Ideal Use:
-  - Microcontroller logic rail
-  - Always-on 3.3V standby rail
-
-##### AP63205
-- Type: Buck Regulator
-- Input Voltage: 3.8V – 32V
-- Output Voltage: Adjustable
-- Max Current: 2A
-- Efficiency: Very good
-- Notes:
-  - Modern alternative to LM2596
-  - Smaller and better performance
-
-#### Supporting Hardware
-
-##### Battery Management System (BMS)
-- ⭐ 2S BMS
-  - Protects from over/under voltage
-  - Ensures safe charging/discharging
-  - Required if LTC4162 isn’t sole safety
-
-##### Thermistor
-- ⭐ 10k NTC Thermistor
-  - For temperature-based charge regulation (JEITA)
-  - Connects to LTC4162
-
-##### I²C USB Adapter
-- ⭐ Qwiic USB or FTDI USB-I2C bridge
-  - Enables monitoring LTC4162 telemetry via serial
-  - Useful for prototyping and dev logging
-
-##### Inline Fuse or Polyfuse
-- ⭐ 1–2A fuse on solar input and battery output
-  - Prevents damage from shorts or reverse connection
-
-##### Dummy Loads
-- ⭐ Adjustable or resistive dummy loads
-  - [150W 20A Adjustable Constant Current Electronic Load](https://www.amazon.com/KKnoon-Adjustable-Constant-Electronic-Discharge/dp/B0BZYLSP6V/)
-  - Simulate CubeSat power draw
-  - Useful for load response testing
-
-#### Development Aids
-
-##### Breadboarding and Prototyping
-- ⭐ Perfboard, headers, jumpers
-- Multimeter & Oscilloscope (already owned)
+1. Finalize battery protection and balancing implementation strategy
+2. Lock EPS rail targets and current budgets from integrated subsystem loads
+3. Confirm whether NTN/D2C hardware remains in this repository baseline or moves to a separate research track
