@@ -107,6 +107,26 @@ docs/
 
 ---
 
+## Electrical Power System (In Progress)
+
+The EPS baseline combines solar input, Li-ion storage, and regulated rail
+distribution for subsystem power delivery.
+
+Current architecture includes:
+
+- SM141K10TF panel-based solar input (3S/3S2P under evaluation)
+- 2S2P LG MJ1 battery storage path
+- LTC4162 charge control with MPPT and telemetry
+- TPSM5D1806 dual buck target for 5 V and 3.3 V rails
+
+Development is focused on charger/rail bring-up, integration-level current
+budget closure, and repeatable bench validation.
+
+See `hardware/eps/design/overview.md` for architecture and
+`hardware/eps/bringup/phase1_validation.md` for validation procedures.
+
+---
+
 ## Communications System (In Progress)
 
 The communications board is a discrete RF design using a conventional amateur

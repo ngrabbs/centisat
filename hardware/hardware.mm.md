@@ -42,8 +42,8 @@ single place for design reviews and traceability.
 | 10k NTC thermistor | Selected | Charge thermal feedback | `hardware/eps/kicad/eps.kicad_sch` | Required for robust charging behavior |
 | Inline fuse/polyfuse | Candidate | Input/output protection | `hardware/eps/README.md` | Final protection architecture pending |
 | Dedicated 2S BMS | Candidate | Battery safety layer | `hardware/eps/README.md` | Include if needed after integrated safety review |
-| USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/README.md` | Useful for charger register visibility |
-| Adjustable electronic load | Selected | Bench load and transient testing | `hardware/eps/README.md` | Core bring-up instrument |
+| USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/bringup/phase1_validation.md` | Useful for charger register visibility |
+| Adjustable electronic load | Selected | Bench load and transient testing | `hardware/eps/bringup/phase1_validation.md` | Core bring-up instrument |
 
 ## Mechanical and Integration References
 
