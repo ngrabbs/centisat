@@ -29,7 +29,7 @@ single place for design reviews and traceability.
 | Item | Status | Role | Reference | Notes |
 |---|---|---|---|---|
 | SM141K10TF solar panel | Selected | Primary EPS energy source | [SM141K10TF link](https://www.digikey.com/en/products/detail/anysolar-ltd/SM141K10TF/14311415) | Evaluate final 3S/3S2P implementation against load profile |
-| 2S2P LG MJ1 pack | Selected | Battery storage | `hardware/eps/eps.md` | Protection and balancing details still open |
+| 2S2P LG MJ1 pack | Selected | Battery storage | `hardware/eps/README.md` | Protection and balancing details still open |
 | LTC4162 charger | Selected | Charge control with MPPT and telemetry | [LTC4162 link](https://www.digikey.com/en/products/detail/analog-devices-inc/LTC4162EUFD-LADM-PBF/9446107) | Baseline charger path |
 | LTC4162 DC2038A eval board | Selected | Bring-up and validation platform | [DC2038A-A link](https://www.digikey.com/en/products/detail/analog-devices-inc/DC2038A-A/9996133?s=N4IgTCBcDaICIGEwAYDMAOAggWkyAugL5A) | Used for early bench characterization |
 | BQ24650 | Candidate | Simpler charger alternative | `hardware/hardware_vendors.md` | Lower complexity, reduced telemetry |
@@ -40,10 +40,10 @@ single place for design reviews and traceability.
 | LM25116, MP2307, TPS5430, TPS62125, AP63205 | Candidate | Regulator alternatives | `hardware/hardware_vendors.md` | Held for trade studies and contingencies |
 | LM2596 | Deferred | Legacy regulator fallback | `hardware/hardware_vendors.md` | Larger footprint and older performance profile |
 | 10k NTC thermistor | Selected | Charge thermal feedback | `hardware/eps/eps.kicad_sch` | Required for robust charging behavior |
-| Inline fuse/polyfuse | Candidate | Input/output protection | `hardware/eps/eps.md` | Final protection architecture pending |
-| Dedicated 2S BMS | Candidate | Battery safety layer | `hardware/eps/eps.md` | Include if needed after integrated safety review |
-| USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/components/eps_phase1_test_plan.md` | Useful for charger register visibility |
-| Adjustable electronic load | Selected | Bench load and transient testing | `hardware/eps/components/eps_phase1_test_plan.md` | Core bring-up instrument |
+| Inline fuse/polyfuse | Candidate | Input/output protection | `hardware/eps/README.md` | Final protection architecture pending |
+| Dedicated 2S BMS | Candidate | Battery safety layer | `hardware/eps/README.md` | Include if needed after integrated safety review |
+| USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/README.md` | Useful for charger register visibility |
+| Adjustable electronic load | Selected | Bench load and transient testing | `hardware/eps/README.md` | Core bring-up instrument |
 
 ## Mechanical and Integration References
 
