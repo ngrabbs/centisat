@@ -9,7 +9,7 @@ baseline and separates optional exploratory payload work.
 
 ### Workstream A: Communications Board Control (RP2040)
 
-- [ ] Configure Si5351A outputs for TX and RX operating states
+- [x] Configure Si5351A outputs for TX and RX operating states
 - [ ] Implement TX state machine (idle, beacon, packet transmit)
 - [ ] Implement framing and bitstream path for BPSK/DBPSK transmission
 - [ ] Implement RX sampling and command packet decode flow
@@ -24,7 +24,7 @@ baseline and separates optional exploratory payload work.
 
 ### Workstream C: Bring-Up and Ground Support
 
-- [ ] Implement serial CLI for board bring-up and diagnostics
+- [x] Implement serial CLI for board bring-up and diagnostics
 - [ ] Create repeatable RF bench-test helper scripts
 - [ ] Implement ground-side telemetry decode utility for captured frames
 
