@@ -4,6 +4,7 @@ This directory tracks interface definitions, protocol decisions, and system
 integration planning across subsystems.
 
 - `interfaces/`: electrical and logical subsystem interface definitions
+  - `interfaces/board_to_board.md`
   - `interfaces/comms_to_fc.md`
   - `interfaces/power_interfaces.md`
   - `interfaces/data_interfaces.md`

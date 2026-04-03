@@ -7,6 +7,14 @@ Track subsystem integration order, prerequisites, and verification checkpoints.
 ## Draft Plan
 
 1. EPS standalone validation
-2. Communications board electrical integration
-3. Flight controller and command loop integration
-4. End-to-end telemetry and command verification
+2. FC <-> EPS I2C telemetry integration
+3. FC <-> Comms SPI data-link integration
+4. End-to-end telemetry and command verification over SPI path
+5. CAN bus bring-up with FC and comms nodes
+6. Expand CAN to payload node and validate multi-node arbitration
+
+## Planned Iteration Gates
+
+- Gate A: I2C and SPI links stable under nominal load
+- Gate B: End-to-end command and telemetry loop closes reliably
+- Gate C: CAN control-plane heartbeat and fault signaling validated
