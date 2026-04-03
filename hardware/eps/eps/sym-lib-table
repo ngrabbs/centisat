@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "LTC4162IUFD-SADM_TRPBF")(type "KiCad")(uri "/Users/nick/Documents/college/MSU_CubeSat/centisat/hardware/EPS/components/LTC4162/LTC4162IUFD_SADM_TRPBF/LTC4162IUFD-SADM_TRPBF.kicad_sym")(options "")(descr ""))
+  (lib (name "FDMC8327L")(type "KiCad")(uri "/Users/nick/Documents/college/MSU_CubeSat/centisat/hardware/EPS/components/FDMC8327L/KiCADv6/2025-07-05_10-20-44.kicad_sym")(options "")(descr ""))
+)

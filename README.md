@@ -1,107 +1,82 @@
-# CeNTiSat - Cellular Non-Terrestrial Investigation Satellite
+# CentiSat  
+### Modular CubeSat Platform for Communications and Systems Research
 
-> A focused CubeSat mission to explore the feasibility and performance of direct-to-cell (D2C) satellite communication using commercial LTE modems in low Earth orbit.
+## Overview
 
----
+CentiSat is a CubeSat-class spacecraft project focused on the design, implementation, and validation of a modular satellite architecture. The system is divided into four primary subsystems:
 
-## 🚀 Mission Overview
+- Electrical Power System (EPS)  
+- Flight Controller  
+- Communications Board (VHF/UHF)  
+- Payload Module  
 
-**CeNTiSat** is a 1U CubeSat designed to perform a 30-day on-orbit study of cellular network signals available in space, particularly from direct-to-cell satellite providers (e.g., AST SpaceMobile, Lynk, Starlink D2C). It utilizes a commercial LTE modem as a passive and active signal sensor to scan, log, and attempt connections to visible cell networks.
-
-In addition to D2C experimentation, the satellite will provide fallback telemetry via UHF downlink for data recovery and status tracking.
-
----
-
-## 🎯 Objectives
-
-* Detect and log LTE/4G/5G signals in orbit using a SIM7600-class modem
-* Attempt network registration and minimal data uplink
-* Correlate cellular signal visibility with orbit, time, and orientation
-* Downlink data via a low-rate UHF beacon
-* Provide a minimal, reproducible framework for future D2C CubeSat experiments
+The project emphasizes practical hardware development, RF communications design, and system-level integration.
 
 ---
 
-## 📊 System Architecture
+## Objectives
 
-* **Platform**: 1U CubeSat, EnduroSat mechanical spec
-* **Power**: 2s2p LG MJ1 18650 battery pack, SM141K10TF solar panels, custom EPS (LTC4162, TPSM5D1806)
-* **OBC**: Microcontroller-based (ESP32 or STM32)
-* **Modem**: SIM7600 LTE module (or compatible)
-* **GPS**: Integrated with modem
-* **UHF Beacon**: Fallback telemetry using LoRa or AX.25
-* **Structure**: Custom-milled aluminum, JLCPCB fabrication
-* **Software**: Custom firmware, FreeRTOS or lightweight loop, log + transmit stack
+- Develop a fully functional CubeSat hardware stack across multiple PCBs  
+- Design and implement a discrete VHF communications system (2m band)  
+- Validate RF performance through measurement (spectrum, filtering, link behavior)  
+- Establish a reproducible architecture for future research and expansion  
 
 ---
 
-## 📦 Repository Structure
+## Repository Structure
 
-```
-CeNTiSat/
-├── hardware/
-│   ├── CAD/                 # Onshape / exported mechanical parts
-│   ├── EPS/                 # Power system design, datasheets, schematics
-│   └── antenna/             # UHF downlink design
-├── software/
-│   ├── firmware/            # OBC firmware (C/C++/Arduino)
-│   ├── ground-station/      # Log parser, CLI, Flask tools
-│   └── utils/               # Tools for log replay, packet inspector
-├── analysis/
-│   ├── stk_modeling.md      # STK scenario design & results
-│   ├── link_predictions/    # Scripts, CSVs, plots
-│   └── power_budget/        # EPS simulations
-├── testing/
-│   ├── validation.md        # Test plans and procedures
-│   └── logs/                # Bench test output and screenshots
-├── docs/
-│   └── theory.md            # Theory of ops, modem config, etc.
-├── hardware.mm.md           # Markdown mind map of all selected parts
-└── README.md                # This file
-```
+- `hardware/` — PCB designs, schematics, and fabrication assets  
+- `firmware/` — Embedded software for each subsystem  
+- `rf/` — RF design, simulations, and measured results  
+- `analysis/` — Orbit modeling, link analysis, and trade studies  
+- `system/` — Interfaces and subsystem integration  
+- `test/` — Validation procedures and test results  
+- `docs/` — Supporting documentation and design references  
 
 ---
 
-## 📊 Key Logs & Outputs
+## Communications System (In Progress)
 
-* LTE modem scan results: MCC/MNC, cell ID, RSSI, SINR
-* GPS time and location tagging
-* UHF beacon log samples
-* STK-modeled access windows vs. actual detections
-* Thermal and power performance over mission duration
+The communications board is a discrete RF design targeting the 2m amateur band. The current architecture includes:
 
----
+- Si5351-based frequency generation  
+- BPSK modulation (planned DBPSK with encoding)  
+- MMIC-based gain stages  
+- Discrete band-pass filtering  
 
-## 🧪 Project Status
-
-| Subsystem    | Status                                            |
-| ------------ | ------------------------------------------------- |
-| Structure    | 🛠 In Progress (Onshape modeling complete)        |
-| EPS          | 🔬 Prototyping (breadboarding LTC4162/TPSM5D1806) |
-| Firmware     | 🧠 Initial design planned                         |
-| UHF Downlink | 🖜 Not yet implemented                            |
-| STK Modeling | 📈 Setup in progress                              |
-| Ground Tools | ⌨️ CLI & telemetry tools in design                |
+Development is iterative, with emphasis on measurable RF performance and clean spectral output.
 
 ---
 
-## 📚 Acknowledgments
+## Analysis and Simulation
 
-* Inspired by the emerging field of NTN (Non-Terrestrial Networks)
-* Developed by \[TBD]
-* Guidance from academic advisors and industry whitepapers on D2C viability
+The repository includes early-stage modeling and analysis used to guide system design:
 
----
+- Orbital simulations and access analysis  
+- Link geometry and crossing studies (MATLAB)  
+- Power and system-level trade studies  
 
-## 📜 License
-
-\[Creative Commons BY-SA]
+These artifacts are retained to support traceability from requirements to implementation.
 
 ---
 
-## 📬 Contact
+## Status
 
-Questions, collaboration inquiries, or launch partnership interest?
+This project is under active development. Hardware, firmware, and RF subsystems are being developed and validated incrementally.
 
-Email: `dng127@msstate.edu`
-Project Lead: **\[Nick Grabbs]**
+---
+
+## Future Work
+
+- Complete communications board bring-up and on-air testing  
+- Implement encoding and error correction for telemetry  
+- Integrate subsystem interfaces and system-level testing  
+- Expand payload capabilities  
+
+---
+
+## License
+
+See `LICENSE` for details.
+
+---
