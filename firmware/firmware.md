@@ -54,3 +54,5 @@ baseline and separates optional exploratory payload work.
 
 - Exploratory firmware references are tracked in
   `docs/research/firmware_references.md`.
+- Flight-controller firmware roadmap is tracked in
+  `firmware/flight_controller/README.md`.
