@@ -1,35 +1,39 @@
-# CeNTiSat Testing & Validation Plan
+# Testing and Validation Plan
 
-## 🔌 Subsystem Bench Testing
+## Baseline Validation (Senior Design)
+
+### Subsystem Bench Testing
 - [ ] Power rail voltage/current draw validation
 - [ ] Solar + battery charge curve testing
 - [ ] Thermal dissipation and heat sink checks
 - [ ] Battery overcharge and undervoltage protections
 
-## 📶 Modem Behavior Testing
-- [ ] AT command set script coverage
-- [ ] Simulate D2C lock: rooftop LTE tests with limited visibility
-- [ ] Simulated GSM jammers to test fallback logic
-- [ ] GPS performance in weak signal conditions
-
-## 📻 UHF Beacon Testing
-- [ ] Verify radio works with external SDR
-- [ ] Confirm message structure and timing
+### Communications Board Testing (Primary Focus)
+- [ ] Verify TX chain output and spectral cleanliness on SDR/spectrum analyzer
+- [ ] Verify RX chain sensitivity and command decode under controlled input
+- [ ] Confirm modulation timing, frame structure, and beacon cadence
 - [ ] Confirm demodulated messages match onboard logs
 
-## 🧊 Environmental Testing (As Available)
+### Integration Testing
+- [ ] Full stack test (EPS + OBC + comms board + selected payload)
+- [ ] Burn-in test: 24+ hour operation in enclosure
+- [ ] Simulated eclipse/power-loss cycles
+- [ ] Final launch configuration test (boot logic, safe mode)
+
+### Environmental Testing (As Available)
 - [ ] Thermal cycling chamber
 - [ ] Vacuum chamber or bell jar test
 - [ ] Vibration or shake test (DIY or lab partner)
 
-## 🧪 Integration Testing
-- [ ] Full stack test (EPS + OBC + Modem + Radio)
-- [ ] Burn-in test: 24+ hour operation in enclosure
-- [ ] Simulated eclipse/power-loss cycles
-- [ ] Final launch configuration test (separation, boot logic, safe mode)
+## Exploratory Validation (Optional Payload Path)
 
-## 🛠 Debug & Telemetry Tools
+### D2C/NTN Modem Behavior
+- [ ] AT command set script coverage
+- [ ] Simulate D2C lock: rooftop LTE tests with limited visibility
+- [ ] Stress fallback/recovery logic under degraded network conditions
+- [ ] GPS performance in weak-signal conditions
+
+## Debug and Telemetry Tooling
 - [ ] Serial interface tools for log inspection
 - [ ] RF sniffing tools (RTL-SDR, SDRplay)
-- [ ] Log parser for CSV/JSON comparison vs. ground truth
-
+- [ ] Log parser for CSV/JSON comparison vs ground truth

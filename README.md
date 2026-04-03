@@ -1,25 +1,38 @@
-# CentiSat  
+# Modular CubeSat Senior Design Repository
 ### Modular CubeSat Platform for Communications and Systems Research
 
 ## Overview
 
-CentiSat is a CubeSat-class spacecraft project focused on the design, implementation, and validation of a modular satellite architecture. The system is divided into four primary subsystems:
+This is a team-built CubeSat-class spacecraft project focused on designing,
+building, and validating a modular satellite architecture.
 
-- Electrical Power System (EPS)  
+This repository contains shared project artifacts across four primary subsystems:
+
+- Electrical Power System (EPS)
 - Flight Controller  
 - Communications Board (VHF/UHF)  
 - Payload Module  
 
-The project emphasizes practical hardware development, RF communications design, and system-level integration.
+The project emphasizes practical hardware development, RF communications design,
+and system-level integration.
+
+### Current Role Focus
+
+The overall mission is team-owned, but this repo currently has the deepest
+implementation focus in communications hardware. The communications subsystem
+work supports the author's senior design focus area: satellite TX/RX design,
+RF link performance, and bench validation.
+
+See `docs/architecture/project_scope.md` for baseline vs exploratory scope.
 
 ---
 
 ## Objectives
 
-- Develop a fully functional CubeSat hardware stack across multiple PCBs  
-- Design and implement a discrete VHF communications system (2m band)  
-- Validate RF performance through measurement (spectrum, filtering, link behavior)  
-- Establish a reproducible architecture for future research and expansion  
+- Develop a functional modular CubeSat stack across multiple PCBs
+- Design and implement a discrete amateur satellite communications chain
+- Validate RF performance through measurement (spectrum, filtering, link behavior)
+- Establish a reproducible architecture for future research and expansion
 
 ---
 
@@ -37,14 +50,23 @@ The project emphasizes practical hardware development, RF communications design,
 
 ## Communications System (In Progress)
 
-The communications board is a discrete RF design targeting the 2m amateur band. The current architecture includes:
+The communications board is a discrete RF design using a conventional amateur
+satellite split:
 
-- Si5351-based frequency generation  
-- BPSK modulation (planned DBPSK with encoding)  
-- MMIC-based gain stages  
-- Discrete band-pass filtering  
+- UHF downlink TX: ~437 MHz (70 cm), BPSK/DBPSK telemetry path
+- VHF uplink RX: ~145.9 MHz (2 m), command receiver path
+
+Current architecture includes:
+
+- Si5351A-based frequency generation
+- RP2040 control and baseband processing
+- BPSK modulation (planned DBPSK with encoding)
+- MMIC-based gain stages
+- Discrete band-pass filtering
 
 Development is iterative, with emphasis on measurable RF performance and clean spectral output.
+
+See `hardware/comms/design/overview.md` for detailed architecture and design rationale.
 
 ---
 
@@ -52,9 +74,12 @@ Development is iterative, with emphasis on measurable RF performance and clean s
 
 The repository includes early-stage modeling and analysis used to guide system design:
 
-- Orbital simulations and access analysis  
-- Link geometry and crossing studies (MATLAB)  
-- Power and system-level trade studies  
+- Orbital simulations and access analysis
+- Link geometry and crossing studies
+- Power and system-level trade studies
+
+Some D2C/NTN modem work is intentionally retained as exploratory payload research.
+It is not the current senior-design baseline communications architecture.
 
 These artifacts are retained to support traceability from requirements to implementation.
 
@@ -68,10 +93,10 @@ This project is under active development. Hardware, firmware, and RF subsystems 
 
 ## Future Work
 
-- Complete communications board bring-up and on-air testing  
-- Implement encoding and error correction for telemetry  
-- Integrate subsystem interfaces and system-level testing  
-- Expand payload capabilities  
+- Complete communications board bring-up and on-air testing
+- Implement encoding and error correction for telemetry
+- Integrate subsystem interfaces and system-level testing
+- Evaluate optional NTN/D2C payload path as a follow-on effort
 
 ---
 

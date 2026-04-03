@@ -1,4 +1,4 @@
-# CeNTiSat Hardware: Electrical Power System (EPS)
+# Hardware: Electrical Power System (EPS)
 
 ## 🔋 Battery Subsystem
 - [x] Select flight-rated cells (LG MJ1 18650, 2s2p)
@@ -29,4 +29,3 @@
 - [ ] Verify power-on-reset behavior
 - [ ] Add test points and debug headers
 - [ ] Finalize PCB layout, order from JLCPCB/PCBWay
-

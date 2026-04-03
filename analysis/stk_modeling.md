@@ -1,31 +1,29 @@
-# CeNTiSat D2C Analysis & STK Modeling
+# STK and Orbit Analysis
 
-## �� CeNTiSat Orbit Modeling
-- [ ] Define initial TLE or orbital parameters (LEO, sun-synch preferred)
-- [ ] Set up CeNTiSat as a satellite object in STK
-- [ ] Configure attitude (e.g., nadir pointing or passive tumble)
-- [ ] Add sensor volume for LTE modem (e.g., 60° cone)
+This file tracks exploratory D2C/NTN payload analysis. It is not the baseline
+communications architecture for the current senior design build.
 
-## 📡 D2C Network Modeling
-- [ ] Create synthetic satellites representing:
+## Orbit Modeling (Shared Foundation)
+- [ ] Define initial TLE or orbital parameters (LEO, sun-synchronous preferred)
+- [ ] Set up the mission satellite object in STK
+- [ ] Configure attitude (nadir pointing or passive tumble)
+
+## D2C/NTN Payload Modeling (Exploratory)
+- [ ] Add sensor volume for LTE modem concept (e.g., 60 degree cone)
+- [ ] Create synthetic network objects for candidate providers:
   - AST SpaceMobile
   - Lynk Global
-  - Starlink D2C (speculative, if needed)
-- [ ] Define representative transmit patterns (e.g., beams or full hemisphere)
-- [ ] Approximate LTE frequency bands in antenna model
+  - Starlink D2C (speculative)
+- [ ] Define representative transmit patterns (beams or hemisphere)
+- [ ] Approximate LTE band behavior in antenna/access model
 
-## 🕓 Contact Window Prediction
-- [ ] Generate access reports between CeNTiSat and D2C sats
-- [ ] Log contact durations, angles, and revisit times
-- [ ] Correlate expected contact with modem scan schedule
+## Contact Window Prediction
+- [ ] Generate access reports between the mission satellite and NTN objects
+- [ ] Log contact duration, look angles, and revisit times
+- [ ] Correlate predicted contact with modem scan schedule assumptions
 
-## 📊 Visualization
-- [ ] Plot expected vs. actual contact timelines
-- [ ] Overlay GPS coverage vs. LTE detections
-- [ ] Produce global heatmap of signal detections (by orbit position)
-
-## 🧾 Outputs for Mission Report
-- [ ] Contact stats summary
-- [ ] Sample power/signal graphs over time
-- [ ] STK scenario file (.vdf) for archiving
-
+## Visualization and Outputs
+- [ ] Plot expected vs actual contact timelines
+- [ ] Overlay GPS coverage vs LTE detections
+- [ ] Produce global heatmap of detections by orbital position
+- [ ] Archive contact stats summary and STK scenario file (.vdf)
