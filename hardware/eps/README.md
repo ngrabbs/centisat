@@ -123,10 +123,13 @@ Primary Measurements:
 ```plaintext
 hardware/eps/
 ├── README.md
-├── eps/
+├── design/
+├── kicad/
 │   ├── eps.kicad_pro
 │   ├── eps.kicad_sch
 │   └── eps.kicad_pcb
+├── bringup/
+├── releases/
 └── components/
     ├── LTC4162/
     ├── TPSM5D1806/

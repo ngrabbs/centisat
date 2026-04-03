@@ -39,7 +39,7 @@ single place for design reviews and traceability.
 | TPSM5D1806 EVM | Selected | Regulator validation hardware | [TPSM5D1806EVM link](https://www.digikey.com/en/products/detail/texas-instruments/TPSM5D1806EVM/13563013?s=N4IgTCBcDaICoAUDKBZArAEQIwA4AMAbCALoC%2BQA) | Supports rail and thermal characterization |
 | LM25116, MP2307, TPS5430, TPS62125, AP63205 | Candidate | Regulator alternatives | `hardware/hardware_vendors.md` | Held for trade studies and contingencies |
 | LM2596 | Deferred | Legacy regulator fallback | `hardware/hardware_vendors.md` | Larger footprint and older performance profile |
-| 10k NTC thermistor | Selected | Charge thermal feedback | `hardware/eps/eps.kicad_sch` | Required for robust charging behavior |
+| 10k NTC thermistor | Selected | Charge thermal feedback | `hardware/eps/kicad/eps.kicad_sch` | Required for robust charging behavior |
 | Inline fuse/polyfuse | Candidate | Input/output protection | `hardware/eps/README.md` | Final protection architecture pending |
 | Dedicated 2S BMS | Candidate | Battery safety layer | `hardware/eps/README.md` | Include if needed after integrated safety review |
 | USB-to-I2C adapter | Selected | Telemetry logging support | `hardware/eps/README.md` | Useful for charger register visibility |

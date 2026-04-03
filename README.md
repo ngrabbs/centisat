@@ -46,6 +46,65 @@ See `docs/architecture/project_scope.md` for baseline vs exploratory scope.
 - `test/` — Validation procedures and test results  
 - `docs/` — Supporting documentation and design references  
 
+### Canonical Layout
+
+```plaintext
+analysis/
+  orbit/
+    stk/
+    matlab/
+    results/
+  link_budget/
+  power/
+  trade_studies/
+
+test/
+  hardware/
+  rf/
+  integration/
+  environmental/
+  validation.md
+
+system/
+  interfaces/
+  protocols/
+  integration/
+
+rf/
+  filters/
+  matching/
+  gain_stages/
+  simulations/
+  measurements/
+
+firmware/
+  comms/
+    tx/
+    rx/
+    encoding/
+    drivers/
+  flight_controller/
+  payload/
+  common/
+
+hardware/
+  eps/{design,kicad,components,bringup,releases}
+  flight_controller/{design,kicad,bringup,releases}
+  comms/{design,kicad,bom,bringup,releases}
+  payload/{design,kicad,bringup,releases}
+  pci104/{template,proto}
+  pv_panel/{design,kicad,manufacturing,releases}
+  CAD/
+
+docs/
+  architecture/
+  comms/
+  hardware/
+  firmware/
+  research/
+  reports/
+```
+
 ---
 
 ## Communications System (In Progress)
