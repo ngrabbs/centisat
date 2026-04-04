@@ -62,6 +62,14 @@ Always check the output source mux bits when writing Si5351 clock control
 registers. AN619 documents these as CLK_SRC[1:0] in the register description.
 Many example drivers online include this implicitly but don't call it out.
 
+## Spectrum — Si5351A Direct (No Tripler)
+
+Span 125–502 MHz, Si5351A CLK0 output straight into TinySA. The 3rd harmonic
+of the square wave is visible at 437.64 MHz / -5.2 dBm, but the noise floor
+is high with energy spread across many harmonics and spurs.
+
+![Si5351A spectrum without tripler](images/si5351a_no_tripler.jpg)
+
 ## Files
 - Driver: `firmware/comms/drivers/si5351a.c`, `si5351a.h`
 - Test app: `firmware/comms/drivers/si5351a_bringup.c`

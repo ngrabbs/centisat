@@ -1,4 +1,4 @@
-# Frequency Tripler Breadboard Build
+# Frequency Tripler Prototype Build
 
 ## Objective
 Verify 3rd harmonic generation: 145.667 MHz in → 437 MHz out, using a 2N3904
@@ -28,15 +28,28 @@ Simplified for clarity:
 - Collector: RFC to Vcc, AC-coupled output through 100 nF
 - Emitter: directly to GND
 
-## 2N3904 Pinout (TO-92, flat side facing you)
+## 2N3904 Pinout
 
+### SOT-23 (SMD — most common SMD package for 2N3904)
+```
+    ┌──────┐
+  1 │•     │ 3
+    │      │
+  2 │      │
+    └──────┘
+```
+Pin 1 = Base, Pin 2 = Emitter, Pin 3 = Collector.
+Marking is usually "1A" or "2A" — check your specific part's datasheet.
+
+### TO-92 (through-hole, flat side facing you)
 ```
    ┌───┐
    │   │
   E  B  C
 ```
-Left = Emitter, Center = Base, Right = Collector.
-**Verify with your datasheet** — some manufacturers swap E/C.
+
+**Always verify pinout against your part's datasheet** — different
+manufacturers sometimes swap pins.
 
 ## Parts List
 
@@ -79,17 +92,20 @@ breadboard. Shorter is better at VHF — every inch of wire is an antenna.
 
 ### Step 2 — Build the circuit
 
-On the RF proto board or breadboard:
+On the RF proto board:
 
-1. Place the 2N3904. Identify E, B, C pins.
-2. Connect Emitter to ground.
-3. Connect 10 kΩ from Base to ground.
-4. Connect input coupling cap (100 nF) from Si5351A CLK0 to Base.
-5. Connect RFC (220 nH) from Vcc to Collector.
-6. Connect output coupling cap (100 nF) from Collector to your output SMA /
-   test point.
-7. Add a bypass cap (100 nF) from Vcc to GND close to the RFC — keeps RF out
-   of the power supply.
+1. Place the 2N3904 (SOT-23) and tack-solder one pad.
+2. Identify B, E, C. Connect Emitter pad to the ground plane.
+3. Solder 10 kΩ (0805) from Base pad to ground.
+4. Solder input coupling cap (100 nF, 0805) in line from input pad to Base.
+5. Solder RFC (220 nH, 0805) from Vcc pad to Collector.
+6. Solder output coupling cap (100 nF, 0805) from Collector to output pad/SMA.
+7. Add a bypass cap (100 nF, 0805) from Vcc to GND close to the RFC — keeps
+   RF out of the power supply.
+
+Keep the signal path linear: input on one side, transistor in the middle,
+output on the other side. Ground connections should go straight down to the
+ground plane through vias or edge pads — avoid long ground return paths.
 
 ### Step 3 — Power up and measure
 
@@ -155,6 +171,70 @@ Record in this file or a separate log:
 - Which R1 value gave the best 437 MHz output
 - Any unexpected spurs or behavior
 
+---
+
+## Test Results (2026-04-04)
+
+### Build
+
+2N3904 (SOT-23) class-C tripler on RF prototype board with 0805 passives.
+10 kΩ base bias resistor. Input from Si5351A CLK0, output to TinySA Ultra.
+
+![Tripler circuit on RF proto board](images/solder_job.jpg)
+
+### Baseline — Si5351A Direct (No Tripler)
+
+Si5351A CLK0 square wave output connected straight to TinySA. The 3rd harmonic
+is visible at 437.64 MHz but the spectrum is noisy with energy at every odd
+harmonic and intermod products across the span.
+
+- **437.64 MHz: -5.2 dBm** (3rd harmonic of square wave)
+- Noise floor rough, many spurs across 140-520 MHz
+
+![Spectrum without tripler](images/si5351a_no_tripler.jpg)
+
+### With Tripler — 10 kΩ Bias
+
+Three clean harmonic peaks above a much lower noise floor. Small spurs
+visible near the 3rd harmonic but well below the main peak.
+
+- **437.64 MHz: -12.2 dBm** (3rd harmonic, target signal)
+- Fundamental and 2nd harmonic visible at expected frequencies
+- Noise floor significantly cleaner than direct square wave
+
+![Spectrum with tripler](images/si5351a_with_tripler.jpg)
+
+### Analysis
+
+The -12.2 dBm output is 7 dB weaker than the raw square wave 3rd harmonic
+(-5.2 dBm). This is expected with the 2N3904 (ft = 300 MHz) — the transistor's
+gain has rolled off significantly at 437 MHz. The BFR92A (ft = 5 GHz, on order)
+should improve this by 10-15 dB.
+
+The cleaner noise floor confirms the tripler is working correctly — instead of
+passing all square wave harmonics, the class-C stage produces a controlled
+harmonic comb that the BPF can select from.
+
+At -12.2 dBm, the ADL5602 MMIC (+20 dB gain) would bring this to ~+8 dBm
+(6 mW), which is a workable CubeSat TX power level even before optimizing
+the tripler transistor.
+
+### Bias Optimization (in progress)
+
+| R1 value | 145.67 MHz | 291.3 MHz | 437.0 MHz | Notes |
+|----------|------------|-----------|-----------|-------|
+| 4.7 kΩ   |            |           |           |       |
+| 10 kΩ    |            |           | -12.2 dBm | Initial test |
+| 22 kΩ    |            |           |           |       |
+| 47 kΩ    | -13.5 dBm  | -34.3 dBm | **-7.4 dBm** | Best so far — 3rd harmonic dominates fundamental |
+
+47 kΩ result: 3rd harmonic is 6.1 dB stronger than fundamental. Deeper
+class-C bias concentrates energy into harmonics as expected.
+
+![Spectrum with tripler — 47 kΩ bias](images/si5351a_with_tripler_47k.jpg)
+
+---
+
 ## What Comes After This
 
 Once you have a 437 MHz signal:
@@ -162,9 +242,26 @@ Once you have a 437 MHz signal:
 2. **MMIC** — SPF5189Z amplifier to boost the signal to +5 to +15 dBm
 3. **Modulator** — 74LVC1G86 XOR gate between Si5351A and tripler for BPSK
 
-## Notes on Breadboard vs RF Proto Board
+## Build Platform: SMD on RF Proto Board
 
-A standard breadboard will work for this test — the frequencies are VHF/UHF
-but the signal levels are low and we're just looking for "does the harmonic
-exist." For the BPF tuning step later, you'll want the RF proto boards with
-proper ground plane. For this tripler test, just keep wires short.
+Use one of the RF prototype boards (github.com/maelh/radio-frequency-prototype-boards)
+with SMD components. This is strongly preferred over a solderless breadboard:
+
+- **Ground plane** — the proto boards have a proper ground plane, which matters
+  at 145 MHz and especially at 437 MHz
+- **Short traces** — SMD pads are close together, minimizing parasitic inductance
+- **Matches final design** — the flight board will be SMD, so you're testing
+  with the same package parasitics you'll have in the real circuit
+- **Breadboard stray capacitance** — each breadboard contact strip adds ~2-5 pF.
+  At 437 MHz that's 70-180 Ohms reactive — enough to kill your signal or detune
+  the circuit significantly
+
+If your 2N3904 is SOT-23, it lands directly on the proto board pads. The
+passives (caps, resistors, inductor) should be 0805 or 0603 from your SMD
+assortment.
+
+### Input/Output connections
+
+Solder short wire stubs or use SMA edge-launch connectors on the proto board
+for input (from Si5351A CLK0) and output (to TinySA). Keep both connections
+as short as possible.
