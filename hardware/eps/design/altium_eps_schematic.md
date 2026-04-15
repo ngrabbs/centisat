@@ -37,7 +37,7 @@ Solar (4x face PCBs, 4S SM141K10TF each)
           3V3_RAIL       5V_RAIL    SCL/SDA
               │             │          │
               └─────────────┴──────────┘
-                     To PCI-104 stack
+                     To CSKB stack
 ```
 
 Key design decision: both buck regulators are fed directly from VOUT_PP
@@ -423,9 +423,9 @@ Place **sheet entry ports** (or off-sheet connectors) on the right edge:
 |---|---|---|---|
 | `VBAT` | Output | `VBAT` | Sheet 3 (battery connector, test point) |
 | `VOUT_PP` | Output | `VOUT_PP` | Sheet 2 (regulator input) and Sheet 3 (test point) |
-| `I2C_SCL` | Bidirectional | `I2C_SCL` | Sheet 3 (PCI-104 connector) |
-| `I2C_SDA` | Bidirectional | `I2C_SDA` | Sheet 3 (PCI-104 connector) |
-| `SMBALERT_N` | Output | `SMBALERT_N` | Sheet 3 (PCI-104 connector) |
+| `I2C_SCL` | Bidirectional | `I2C_SCL` | Sheet 3 (CSKB connector) |
+| `I2C_SDA` | Bidirectional | `I2C_SDA` | Sheet 3 (CSKB connector) |
+| `SMBALERT_N` | Output | `SMBALERT_N` | Sheet 3 (CSKB connector) |
 | `GND` | Passive | `GND` | Global power port (auto-connects) |
 
 ---
@@ -769,7 +769,7 @@ the regulator footprint.
 > bypass at each consumer (RP2040, RF stages, etc.) is the
 > responsibility of the consuming subsystem. These caps cover the
 > board-level transient response and any trace inductance between
-> the buck stages and the PCI-104 connector.
+> the buck stages and the CSKB stack connectors.
 
 ---
 
@@ -777,8 +777,8 @@ the regulator footprint.
 
 | Port Name | Direction | Net | Goes To |
 |---|---|---|---|
-| `+3V3` | Output | `+3V3` | Sheet 3 (PCI-104, LEDs, test points) |
-| `+5V` | Output | `+5V` | Sheet 3 (PCI-104, test points) |
+| `+3V3` | Output | `+3V3` | Sheet 3 (CSKB, LEDs, test points) |
+| `+5V` | Output | `+5V` | Sheet 3 (CSKB, test points) |
 | `GND` | Passive | `GND` | Global power port |
 
 Sheet 2 Port Entries (Left Edge):
@@ -845,15 +845,15 @@ Sheet 2 Port Entries (Left Edge):
 
 ## Sheet 3: Connectors & Telemetry
 
-This sheet holds the battery connector, PCI-104 stack header, status
+This sheet holds the battery connector, CSKB H1 + H2 stack connectors, status
 LEDs, and test points.
 
 ### Text Frame (Place > Text Frame, top of sheet):
 
-> CONNECTORS & TELEMETRY — Battery interface, PCI-104 stack connector
+> CONNECTORS & TELEMETRY — Battery interface, CSKB H1 + H2 stack connectors
 > for inter-board power and signal distribution, status LEDs, and test
 > points for bench validation. All subsystem power and I2C telemetry
-> routes through the PCI-104 header.
+> routes through the CSKB H1/H2 connectors.
 
 ---
 
@@ -882,69 +882,88 @@ nets.
 
 ---
 
-### Section B: PCI-104 Stack Connector (Center of Sheet)
+### Section B: CSKB H1 + H2 Stack Connectors (Center of Sheet)
 
 #### Connector Selection
 
-**Part: Samtec MMS-130-02-L-DV-A** — 2×30 (60-pin), 2.00mm pitch,
-through-hole vertical socket. This is the standard PCI-104 pin socket.
+**Part: 2× Samtec ESQ-126-37-G-D** — 2×26 (52-pin) each, 0.1″
+(2.54 mm) pitch, **non-stackthrough** through-hole vertical socket.
+One populates the H1 (signals) position, one populates the H2 (power)
+position, for a total of 104 pins per Pumpkin's CSKB layout.
 
-The PCI-104 spec allows two 2×30 connectors (J1 and J2) for 120 total
-pins. For the EPS prototype, **populate only one connector (J1)** — 60
-pins is more than sufficient for the current signal count (~12 used).
-Leave the J2 footprint in the PCB layout unpopulated for future
-expansion.
+The EPS is the **stack endpoint** (acts as the motherboard), so it
+uses the non-stackthrough part (ESQ-126-37-G-D) per Pumpkin's
+footnote on page 17 of the Rev. E datasheet. All other boards in the
+centisat stack (FC, comms, payload) use the stackthrough variant
+ESQ-126-39-G-D.
 
-The mating male header on the adjacent board in the stack is the
-**Samtec TMM-130-02-L-DV** (2×30 pin header, 2.00mm, vertical).
+Default stacking height is 15 mm between modules. If a module later
+needs taller clearance, Samtec SSQ-126-22-G-D 10 mm extensions can be
+inserted between specific interfaces for 24–25 mm spacing.
 
-Search Manufacturer Part Search for "MMS-130-02-L-DV-A" or place a
-generic 2×30 pin socket symbol (2.00mm pitch) and assign the Samtec
-MPN in the component properties. The footprint should match the KiCad
-template: `PinSocket_2x30_P2.00mm_Vertical` (0.8mm drill, 1.35mm pad).
+The mating adjacent board (FC) uses ESQ-126-39-G-D (stackthrough) on
+its own H1 and H2 positions.
 
-#### Provisional Pin Assignment (EPS-Relevant Subset, J1 Only)
+Search Manufacturer Part Search for "ESQ-126-37-G-D" or place a
+generic 2×26 pin socket symbol (0.1″ (2.54 mm) pitch) and assign the
+Samtec MPN in the component properties. **Mechanical note:** exact
+X/Y position of the H1 and H2 footprints on the PCB must match
+Pumpkin's motherboard layout (see `DS_CSK_MB_710-00484-E.pdf` page 5,
+"Simplified Mechanical Layout") before layout.
 
-This table defines the EPS-side pins on J1. Pin numbering follows
-row-letter-first convention (a1–a30 on one row, b1–b30 on the other)
-per the PCI-104 spec. Coordinate with the flight controller and comms
-board teams for the complete pin map.
+#### Pin Assignment (Pumpkin CSKB H1/H2)
 
-| Pin | Net Name | Direction | Function |
-|---|---|---|---|
-| a1 | `+3V3` | Power Out | 3.3V regulated rail |
-| a2 | `+3V3` | Power Out | 3.3V (parallel for current sharing) |
-| a3 | `GND` | Power | Ground return for 3.3V |
-| a4 | `+5V` | Power Out | 5.0V regulated rail |
-| a5 | `+5V` | Power Out | 5.0V (parallel for current sharing) |
-| a6 | `GND` | Power | Ground return for 5V |
-| a7 | `VBAT` | Power Out | Unregulated battery bus (6.0–8.4V) |
-| a8 | `GND` | Power | Ground return for VBAT |
-| a9 | `I2C_SCL` | Bidirectional | EPS telemetry I2C clock |
-| a10 | `I2C_SDA` | Bidirectional | EPS telemetry I2C data |
-| a11 | `SMBALERT_N` | Output | LTC4162 interrupt/alert |
-| a12 | `GND` | Power | Ground (signal reference) |
-| a13–a30 | TBD | — | Reserved |
-| b1–b30 | TBD | — | Reserved (FC, comms, payload signals) |
+> **Canonical reference:** `system/interfaces/cskb_pinmap.md` is the
+> authoritative pin map for the centisat stack. The table below is a
+> board-local view and must match that file. Update the canonical
+> file first if anything here needs to change.
 
-Note: power pins are doubled (a1/a2 for 3.3V, a4/a5 for 5V) with
-adjacent GND returns. This reduces connector pin resistance and
-provides low-impedance current return paths. The remaining ~48 pins
-are available for FC SPI, CAN bus, payload signals, and spares.
+Pin numbers follow the Pumpkin CubeSat Kit Motherboard H1/H2 CSKB
+convention (DS_CSK_MB_710-00484-E.pdf, doc Rev. A, March 2012,
+pp. 13–16). All boards in the centisat stack use the same H1/H2 pin
+numbers for the same signal classes so that mechanical and electrical
+compatibility with Pumpkin / MBM2 / iSpace hardware is preserved.
 
-#### Note (Place > Note, next to PCI-104):
+| Pin | Pumpkin name | centisat net | Direction (EPS) | Function |
+|---|---|---|---|---|
+| H1.41 | `SDA_SYS` | `I2C_SDA` | Bidirectional | Housekeeping I2C data (LTC4162 slave 0x68) |
+| H1.43 | `SCL_SYS` | `I2C_SCL` | Bidirectional | Housekeeping I2C clock |
+| H1.29 | `-RESET` | `SYS_RESET_N` | (not driven by EPS v0.1) | Stack reset line — reserved |
+| H1.49 | `USER2` | `EPS_ALERT_N` | Output (open-drain) | **LTC4162 `SMBALERT_N` → FC `EPS_ALERT_N`** — EPS charger alert / fault indication |
+| H2.25 | `+5V_SYS` | `+5V` | Power Out | 5 V stack rail (from TPS62933F #1) |
+| H2.26 | `+5V_SYS` | `+5V` | Power Out | 5 V (parallel for current sharing) |
+| H2.27 | `VCC_SYS` | `+3V3` | Power Out | 3.3 V stack rail (from TPS62933F #2) |
+| H2.28 | `VCC_SYS` | `+3V3` | Power Out | 3.3 V (parallel for current sharing) |
+| H2.29 | `DGND` | `GND` | Power | Digital ground return |
+| H2.30 | `DGND` | `GND` | Power | Digital ground return |
+| H2.31 | `AGND` | `GND` | Power | Analog ground (single plane — star-tied to DGND at EPS, single pin on CSKB) |
+| H2.32 | `DGND` | `GND` | Power | Digital ground return (third DGND pin) |
+| H2.45 | `VBATT` | `VBAT` | Power Out | Unregulated battery bus (6.0–8.4 V, monitor only on other boards) |
+| H2.46 | `VBATT` | `VBAT` | Power Out | Battery bus (parallel for current sharing) |
 
-> PCI-104 stack connector: Samtec MMS-130-02-L-DV-A (2×30, 2.00mm,
-> through-hole socket). Only J1 populated for prototype; J2 footprint
-> reserved for future expansion. Mate with TMM-130-02-L-DV on
-> adjacent board. Pin assignment is provisional — full pin map must
-> be coordinated across all subsystem boards before PCB layout.
-> Single GND plane, star-connected at the connector — no separate
+All other H1/H2 pins are unused on the EPS board (reserved for FC
+SPI, UART debug, COMMS_EN/FAULT, CAN stub, and future payload signals
+as defined in the canonical pin map).
+
+Note: power pins are doubled (H2.25/26, H2.27/28, H2.45/46) with
+adjacent DGND pins (H2.29, H2.30, H2.32). This reduces connector pin
+resistance and provides low-impedance current return paths. AGND is a
+single pin on CSKB (H2.31) and is tied to the single GND plane at the
+EPS board only.
+
+#### Note (Place > Note, next to CSKB connectors):
+
+> CSKB stack connectors: 2× Samtec ESQ-126-37-G-D (2×26, 0.1″
+> (2.54 mm), non-stackthrough through-hole socket, one each for H1
+> and H2). EPS is the stack endpoint — non-stackthrough is the
+> correct variant per Pumpkin datasheet Rev. E page 17. Mates with
+> ESQ-126-39-G-D (stackthrough) on the adjacent FC/comms/payload
+> boards. Single GND plane, star-connected at the EPS — no separate
 > analog/digital ground returns.
 
 #### Bulk Bypass at Stack Connector
 
-Place bypass caps at the PCI-104 connector for the distributed rails:
+Place bypass caps at the CSKB H2 connector for the distributed rails:
 
 | Ref | Value | Package | Connection |
 |---|---|---|---|
@@ -1055,19 +1074,19 @@ on opposite sides of the board.
 │  [Text Frame: Connectors & Telemetry Description]                    │
 │                                                                      │
 │  ┌──────────────────┐        ┌─────────────────────────────┐         │
-│  │ Battery          │        │ J1: MMS-130-02-L-DV-A       │         │
-│  │                  │        │ PCI-104 (2x30, 2mm, J1 only)│         │
-│  │ J5 (JST)    VBAT ├────────┤ a1,a2  +3V3    C60,C61      │         │
-│  │ J6 (header) GND  ├────────┤ a3     GND                  │         │
-│  │                  │        │ a4,a5  +5V     C62,C63      │         │
-│  └──────────────────┘        │ a6     GND                  │         │
-│                              │ a7     VBAT                 │         │
-│                              │ a8     GND                  │         │
-│                              │ a9     I2C_SCL              │         │
-│                              │ a10    I2C_SDA              │         │
-│                              │ a11    SMBALERT_N           │         │
-│                              │ a12    GND                  │         │
-│                              │ a13-a30, b1-b30  (reserved) │         │
+│  │ Battery          │        │ J7 (H1) + J7 (H2):          │         │
+│  │                  │        │ 2× ESQ-126-37-G-D endpoint  │         │
+│  │ J5 (JST)    VBAT ├────────┤ H2.27/28 +3V3   C60,C61     │         │
+│  │ J6 (header) GND  ├────────┤ H2.29/30/32 GND             │         │
+│  │                  │        │ H2.25/26 +5V    C62,C63     │         │
+│  └──────────────────┘        │ H2.31   AGND                │         │
+│                              │ H2.45/46 VBAT               │         │
+│                              │ H1.41   I2C_SDA             │         │
+│                              │ H1.43   I2C_SCL             │         │
+│                              │ H1.49   EPS_ALERT_N         │         │
+│                              │           (→ EPS_ALERT_N    │         │
+│                              │            on FC side)      │         │
+│                              │ (all other H10 pins reserved)│        │
 │                              └─────────────────────────────┘         │
 │                              [J2 footprint: DNP for prototype]       │
 │                                                                      │
@@ -1092,11 +1111,11 @@ on opposite sides of the board.
 
 - [ ] `VBAT` — from Sheet 1, to battery connector and TP4
 - [ ] `VOUT_PP` — from Sheet 1, to TP3 (also routed to Sheet 2 regulators)
-- [ ] `+3V3` — from Sheet 2, to PCI-104, LED, test point
-- [ ] `+5V` — from Sheet 2, to PCI-104, LED, test point
-- [ ] `I2C_SCL` — from Sheet 1, to PCI-104
-- [ ] `I2C_SDA` — from Sheet 1, to PCI-104
-- [ ] `SMBALERT_N` — from Sheet 1, to PCI-104 (and optional D12)
+- [ ] `+3V3` — from Sheet 2, to CSKB H2.27/28, LED, test point
+- [ ] `+5V` — from Sheet 2, to CSKB H2.25/26, LED, test point
+- [ ] `I2C_SCL` — from Sheet 1, to CSKB H1.43
+- [ ] `I2C_SDA` — from Sheet 1, to CSKB H1.41
+- [ ] `EPS_ALERT_N` — from Sheet 1 (LTC4162 SMBALERT_N), to CSKB H1.49 (and optional D12)
 
 ---
 ---
@@ -1125,7 +1144,7 @@ On each sheet, double-click the title block and fill in:
 | Field | Sheet 1 | Sheet 2 | Sheet 3 |
 |---|---|---|---|
 | Title | CubeSat EPS — Solar Input & Charger | CubeSat EPS — Regulation | CubeSat EPS — Connectors & Telemetry |
-| Revision | 0.1 | 0.1 | 0.1 |
+| Revision | 0.2 | 0.2 | 0.2 |
 | Drawn By | Nick Grabbs | Nick Grabbs | Nick Grabbs |
 | Date | (today) | (today) | (today) |
 
@@ -1193,7 +1212,7 @@ Save to `hardware/eps/releases/EPS_schematic_v0.1.pdf` for review.
 |---|---|---|---|
 | J5 | JST-PH 2-pin | Battery connector | 1 |
 | J6 | 1x2 pin header | Bench supply alt connector | 1 |
-| J7 (J1) | Samtec MMS-130-02-L-DV-A | PCI-104 2×30 socket, 2.00mm, vertical | 1 |
+| J7 (H1 + H2) | 2× Samtec ESQ-126-37-G-D | CSKB 2×26 endpoint socket, 0.1″ (2.54 mm), vertical, non-stackthrough | 2 |
 | D10 | Green LED, 0603 | 3.3V power indicator | 1 |
 | D11 | Green LED, 0603 | 5.0V power indicator | 1 |
 | D12 | Red LED, 0603 | SMBALERT indicator (optional) | 1 |

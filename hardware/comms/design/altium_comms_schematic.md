@@ -8,7 +8,7 @@ AFSK uplink receiver (2m), with an RP2040 (Pico module) as the digital
 controller.
 
 ```
-PCI-104 Stack Connector (from EPS)
+CSKB Stack Connectors (from EPS, H1 signals + H2 power)
      │
      ├── +3V3 ──→ Si5351A, 74LVC1G86, MCP6022, RP2040
      ├── +5V  ──→ SA612, ADL5602
@@ -25,7 +25,7 @@ Si5351A (3-output clock gen, I2C controlled by RP2040)
 ```
 
 Key design decisions:
-1. **Power comes from the EPS via the PCI-104 bus connector** — no on-board
+1. **Power comes from the EPS via the CSKB stack connectors** — no on-board
    voltage regulators. +3V3 and +5V are generated on the EPS board and
    distributed through the stack connector.
 2. **XOR BPSK modulation at 145.67 MHz** (before the tripler), not at
@@ -50,7 +50,7 @@ Key design decisions:
    - `RX_Chain.SchDoc` — SA612 mixer, Sallen-Key LPF, MCP6022 gain stage
    - `Digital_Control.SchDoc` — RP2040 (Pico module), USB, GPIOs
    - `Power.SchDoc` — power distribution, bypass, and protection
-   - `Connectors.SchDoc` — PCI-104 stack connector, SMA connectors, test headers
+   - `Connectors.SchDoc` — CSKB H1 + H2 stack connectors, SMA connectors, test headers
 3. Each sheet uses A3 landscape format
 4. Set the project's designator scope to "Flat" so R1, C1, etc. are unique
    across all sheets
@@ -136,7 +136,7 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                                                                          │
-│  PCI-104 Bus (from EPS)                                                  │
+│  CSKB Bus (H1 + H2, from EPS)                                          │
 │  ┌─────────────────┐                                                     │
 │  │ +3V3  +5V  GND  │                                                     │
 │  │ I2C_SCL/SDA     │                                                     │
@@ -187,10 +187,10 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 >
 > | Rail | Source | Voltage | Consumers |
 > |------|--------|---------|-----------|
-> | +3V3 | EPS via PCI-104 (a1, a2) | 3.3V ±2% | RP2040, Si5351A, 74LVC1G86, MCP6022 |
-> | +5V | EPS via PCI-104 (a4, a5) | 5.0V ±2% | SA612, ADL5602, tripler bias, Pico VSYS |
-> | GND | EPS via PCI-104 (a3, a6, a8, a12) | 0V | All |
-> | VBAT | EPS via PCI-104 (a7) | 6.0–8.4V | Monitor only (not used for power) |
+> | +3V3 | EPS via CSKB (H2.27/28) | 3.3V ±2% | RP2040, Si5351A, 74LVC1G86, MCP6022 |
+> | +5V | EPS via CSKB (H2.25/26) | 5.0V ±2% | SA612, ADL5602, tripler bias, Pico VSYS |
+> | GND | EPS via CSKB (H2.29/30/32, H2.31 AGND) | 0V | All |
+> | VBAT | EPS via CSKB (H2.45/46) | 6.0–8.4V | Monitor only (not used for power) |
 >
 > **Estimated current budget:**
 > +3V3: ~150 mA (RP2040 ~50mA, Si5351A ~30mA, logic ~10mA, op-amp ~10mA)
@@ -217,7 +217,7 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 
 > **Key Design Decisions**
 >
-> 1. Power from EPS via PCI-104 bus — no on-board regulators
+> 1. Power from EPS via CSKB bus — no on-board regulators
 > 2. BPSK modulation at 145.67 MHz (before tripler) — 74LVC1G86
 >    fails at 437 MHz, see overview.md timing analysis
 > 3. Odd-order frequency multiplication preserves BPSK phase states
@@ -240,7 +240,7 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 > | 4 | RX Chain | SA612 mixer, Sallen-Key LPF, MCP6022 gain |
 > | 5 | Digital Control | RP2040 (Pico module), GPIOs, USB |
 > | 6 | Power | Distribution, protection, bypass |
-> | 7 | Connectors | PCI-104 bus, SMA ports, test points |
+> | 7 | Connectors | CSKB H1 + H2 bus, SMA ports, test points |
 
 ### Text Frame 7: Revision History (Bottom, or Separate Table)
 
@@ -249,7 +249,9 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 > | Rev | Date | Author | Description |
 > |-----|------|--------|-------------|
 > | 0.1 | 2026-04-10 | NG | Initial schematic — all sheets placed, basic connectivity |
-> | 0.2 | 2026-04-13 | NG | Added Connectors sheet, PCI-104 bus, removed on-board regulators, added overview sheet |
+> | 0.2 | 2026-04-13 | NG | Added Connectors sheet, stack bus, removed on-board regulators, added overview sheet |
+> | 0.3 | 2026-04-15 | NG | Added COMMS_IRQ on GP3 and SPI slave wiring on GP16–19; initial Pumpkin pin-number lock |
+> | 0.4 | 2026-04-15 | NG | Rebuilt connectors against Pumpkin datasheet Rev. E: bus renamed PC/104 → CubeSat Kit Bus (CSKB); pin numbers remapped H10 → H1/H2; connector family corrected to 2× Samtec ESQ-126-39-G-D stackthrough (2×26, 52 pins each); see `system/interfaces/cskb_pinmap.md` |
 
 ### How to Build This Sheet in Altium
 
@@ -437,8 +439,8 @@ CLK2 (pin 5) ── [no connect X] or spare header
 
 ### Sheet 2 Ports Checklist
 
-- [ ] `I2C_SDA` — bidirectional, to RP2040 and PCI-104 bus
-- [ ] `I2C_SCL` — bidirectional, to RP2040 and PCI-104 bus
+- [ ] `I2C_SDA` — bidirectional, to RP2040 and CSKB H1.41
+- [ ] `I2C_SCL` — bidirectional, to RP2040 and CSKB H1.43
 - [ ] `CLK0_OUT` — output, 145.67 MHz to TX Chain
 - [ ] `CLK1_OUT` — output, 145.9 MHz to RX Chain
 - [ ] `+3V3` — power port (global, from EPS via bus)
@@ -1059,8 +1061,13 @@ with its net name.
 | Pico Pin | Net Name | Goes To | Connection |
 |---|---|---|---|
 | GP2 (pin 4) | `BPSK_DATA` | XOR gate pin 2 | BPSK_DATA net label |
+| GP3 (pin 5) | `COMMS_IRQ` | CSKB H1.16 | COMMS_IRQ net label (output, active-low, push-pull, normally high — asserts when RX packet ready or TX status change; FC ISR triggers SPI read) |
 | GP4 (pin 6) | `I2C_SDA` | Si5351A SDA | I2C_SDA net label |
 | GP5 (pin 7) | `I2C_SCL` | Si5351A SCL | I2C_SCL net label |
+| GP16 (pin 21) | `SPI_COMMS_MISO` | CSKB H1.22 | SPI0 MISO — comms → FC (slave TX) |
+| GP17 (pin 22) | `SPI_COMMS_CS_N` | CSKB H1.24 | SPI0 CSn — slave select from FC |
+| GP18 (pin 24) | `SPI_COMMS_SCK` | CSKB H1.21 | SPI0 SCK — clock from FC |
+| GP19 (pin 25) | `SPI_COMMS_MOSI` | CSKB H1.23 | SPI0 MOSI — FC → comms |
 | GP26/ADC0 (pin 31) | `RX_BASEBAND` | MCP6022 output | RX_BASEBAND net label |
 | 3V3 (pin 36) | `+3V3` | Power (from EPS) | +3V3 power port |
 | GND (pins 3,8,13,18,23,28,33,38) | `GND` | Ground | GND power port |
@@ -1071,7 +1078,7 @@ with its net name.
 
 > Pico module power: The Pico has an internal regulator that produces
 > 3.3V from VSYS (1.8–5.5V input). For stack operation, feed +5V
-> from the PCI-104 bus to VSYS through a Schottky diode (prevents
+> from the CSKB bus to VSYS through a Schottky diode (prevents
 > back-feeding when USB is also connected). The Pico's internal 3V3
 > regulator is then active and supplies the on-module 3V3. The +3V3
 > power port on this board is the EPS-supplied rail — connect Pico
@@ -1150,8 +1157,13 @@ Use whatever free GPIOs are available. Mark as DNP for flight.
 │                                                                  │
 │  [USB Connector]      [Pico Module / 2x20 Header]                │
 │   (optional)           GP2  ── BPSK_DATA (port)                  │
-│   D+  D-  VBUS GND    GP4  ── I2C_SDA (port)                    │
+│   D+  D-  VBUS GND     GP3  ── COMMS_IRQ (port → H1.16)          │
+│                        GP4  ── I2C_SDA (port)                    │
 │                        GP5  ── I2C_SCL (port)                    │
+│                        GP16 ── SPI_COMMS_MISO (port → H1.22)     │
+│                        GP17 ── SPI_COMMS_CS_N  (port → H1.24)    │
+│                        GP18 ── SPI_COMMS_SCK   (port → H1.21)    │
+│                        GP19 ── SPI_COMMS_MOSI  (port → H1.23)    │
 │                        GP26 ── RX_BASEBAND (port)                │
 │                        3V3  ── +3V3 (power port)                 │
 │                        VSYS ── from +5V via Schottky             │
@@ -1171,9 +1183,27 @@ Use whatever free GPIOs are available. Mark as DNP for flight.
 - [ ] `I2C_SDA` — bidirectional, to GP4
 - [ ] `I2C_SCL` — bidirectional, to GP5
 - [ ] `BPSK_DATA` — output, from GP2
+- [ ] `COMMS_IRQ` — output, from GP3 (to Connectors sheet → H1.16)
+- [ ] `SPI_COMMS_MISO` — output, from GP16 (to Connectors sheet → H1.22)
+- [ ] `SPI_COMMS_CS_N` — input, to GP17 (from Connectors sheet → H1.24)
+- [ ] `SPI_COMMS_SCK` — input, to GP18 (from Connectors sheet → H1.21)
+- [ ] `SPI_COMMS_MOSI` — input, to GP19 (from Connectors sheet → H1.23)
 - [ ] `RX_BASEBAND` — input, to GP26/ADC0
 - [ ] `+3V3` — power port (Pico 3V3)
 - [ ] `GND` — power port (global)
+
+#### Note (Place > Note, next to GP3 / COMMS_IRQ label):
+
+> COMMS_IRQ is a data-ready interrupt from the comms RP2040 to the
+> flight controller, modelled after the AX5043 IRQ pattern in AMSAT
+> RT-IHU. Push-pull output, active-low, normally held high. Comms
+> firmware asserts the line when (a) an RX packet has been fully
+> received and is available in the slave FIFO, or (b) a TX-complete
+> or TX-underrun status needs FC attention. The FC uses a GPIO-EXTI
+> ISR to trigger a SPI read transaction; comms de-asserts the line
+> after the FC CS_N drops (or after a firmware-side clear). Do NOT
+> add a pull-up on this board — the FC side (R11 on FC Sheet 4) has
+> a 10k pull-up that keeps the line defined while comms is in reset.
 
 ---
 ---
@@ -1181,14 +1211,14 @@ Use whatever free GPIOs are available. Mark as DNP for flight.
 ## Sheet 6: Power
 
 This sheet handles power distribution across the comms board. **All
-regulated power (+3V3, +5V) comes from the EPS board via the PCI-104
+regulated power (+3V3, +5V) comes from the EPS board via the CSKB
 stack connector** — there are no on-board voltage regulators on the
 comms board (prototype configuration).
 
 ### Text Frame (Place > Text Frame, top of sheet):
 
 > POWER DISTRIBUTION — The comms board receives +3V3 and +5V from the
-> EPS via the PCI-104 stack connector. No on-board voltage regulation.
+> EPS via the CSKB stack connectors. No on-board voltage regulation.
 > This sheet provides input protection, bulk bypass capacitors, and
 > distributes power to all subsystems. Power budget: ~150 mA on +3V3
 > (RP2040 + Si5351A + logic), ~80 mA on +5V (SA612 + ADL5602 +
@@ -1199,7 +1229,7 @@ comms board (prototype configuration).
 
 ### Section A: Input Protection and Filtering (Left of Sheet)
 
-Power enters the board through the PCI-104 connector (defined on the
+Power enters the board through the CSKB H2 connector (defined on the
 Connectors sheet). On this sheet, we receive the power port symbols
 and add protection and filtering.
 
@@ -1214,13 +1244,13 @@ and add protection and filtering.
 | C36 | 100nF, 16V, X7R | 0402 | +3V3 to GND | HF bypass at entry |
 
 ```
-+5V (from PCI-104) ── D4 (Schottky) ──┬── +5V rail (internal)
++5V (from CSKB H2.25/26) ── D4 (Schottky) ──┬── +5V rail (internal)
                                        │
                                    C33(47µF) C34(100nF)
                                        │       │
                                       GND     GND
 
-+3V3 (from PCI-104) ──────────────────┬── +3V3 rail
++3V3 (from CSKB H2.27/28) ───────────┬── +3V3 rail
                                        │
                                    C35(47µF) C36(100nF)
                                        │       │
@@ -1236,7 +1266,7 @@ and add protection and filtering.
 > Si5351A are sensitive to voltage drop — 3.0V may be too low for
 > reliable operation. If reverse polarity protection is needed on
 > +3V3, use a P-MOSFET instead of a Schottky (near-zero drop when
-> conducting). Bulk caps dampen transients from the PCI-104 connector
+> conducting). Bulk caps dampen transients from the CSKB connector
 > traces. The EPS has its own bulk caps at the connector — these
 > are the receiving-end complements.
 
@@ -1262,7 +1292,7 @@ bypass at the power distribution point.
 > Board-level bulk bypass at the power distribution star point.
 > Local bypass at each consumer IC is the responsibility of that
 > IC's sheet (C1/C2/C3 on Clock Gen, C8 on TX, C21/C22 on RX, etc.).
-> These caps cover trace inductance between the PCI-104 connector
+> These caps cover trace inductance between the CSKB connector
 > and the far side of the board. Place C37/C39 near the center of
 > their respective power distribution traces.
 
@@ -1341,8 +1371,8 @@ Mark as DNP (Do Not Populate) for flight — LEDs waste power in orbit.
 
 ### Sheet 6 Ports Checklist
 
-- [ ] `+3V3` — power port (global, from EPS via PCI-104)
-- [ ] `+5V` — power port (global, from EPS via PCI-104)
+- [ ] `+3V3` — power port (global, from EPS via CSKB H2.27/28)
+- [ ] `+5V` — power port (global, from EPS via CSKB H2.25/26)
 - [ ] `GND` — power port (global)
 - [ ] `VSYS` — net label, to Pico module VSYS pin
 
@@ -1368,78 +1398,97 @@ of at least 5.5V.
 
 ## Sheet 7: Connectors
 
-This sheet holds the PCI-104 stack connector, RF SMA connectors, and
-any test point headers. It is the physical interface between the comms
-board and the rest of the CubeSat stack.
+This sheet holds the CSKB H1 + H2 stack connectors, RF SMA connectors,
+and any test point headers. It is the physical interface between the
+comms board and the rest of the CubeSat stack.
 
 ### Text Frame (Place > Text Frame, top of sheet):
 
-> CONNECTORS — PCI-104 stack connector for inter-board power and
-> signal distribution, SMA connectors for TX and RX antenna ports,
-> and test points for bench validation. All power (+3V3, +5V) and
-> I2C telemetry routes through the PCI-104 header. The comms board
-> is a power CONSUMER — it receives regulated rails from the EPS.
+> CONNECTORS — CSKB H1 + H2 stack connectors for inter-board power
+> and signal distribution, SMA connectors for TX and RX antenna
+> ports, and test points for bench validation. All power (+3V3, +5V)
+> arrives on H2; I2C, SPI, and COMMS_IRQ route through H1. The comms
+> board is a power CONSUMER — it receives regulated rails from the
+> EPS.
 
 ---
 
-### Section A: PCI-104 Stack Connector (Center of Sheet)
+### Section A: CSKB H1 + H2 Stack Connectors (Center of Sheet)
 
 #### Connector Selection
 
-**Part: Samtec MMS-130-02-L-DV-A** — 2×30 (60-pin), 2.00mm pitch,
-through-hole vertical socket. This is the same connector used on the
-EPS board.
+**Part: 2× Samtec ESQ-126-39-G-D** — 2×26 (52-pin) each, 0.1″
+(2.54 mm) pitch, stackthrough through-hole vertical socket. One
+populates the H1 (signals) position, one populates the H2 (power)
+position, for a total of 104 pins per Pumpkin's CSKB layout. Same
+stackthrough variant as the FC board; EPS uses the non-stackthrough
+ESQ-126-37-G-D because it is the stack endpoint.
 
-The mating male header on the adjacent board in the stack is the
-**Samtec TMM-130-02-L-DV** (2×30 pin header, 2.00mm, vertical).
+The mating adjacent board's CSKB sockets are the same ESQ-126-39-G-D
+on FC and payload, and ESQ-126-37-G-D on EPS. Default stacking height
+is 15 mm.
 
-Search Manufacturer Part Search for "MMS-130-02-L-DV-A" or place a
-generic 2×30 pin socket symbol (2.00mm pitch) and assign the Samtec
-MPN in the component properties.
+Search Manufacturer Part Search for "ESQ-126-39-G-D" or place a
+generic 2×26 pin socket symbol (0.1″ (2.54 mm) pitch) and assign the
+Samtec MPN in the component properties. **Mechanical note:** exact
+X/Y position of the H1 and H2 footprints on the PCB must match
+Pumpkin's motherboard layout (see `DS_CSK_MB_710-00484-E.pdf` page 5,
+"Simplified Mechanical Layout") before layout.
 
-Only J1 populated for prototype (60 pins). J2 footprint reserved for
-future expansion.
+#### Pin Assignment (Pumpkin CSKB H1/H2)
 
-#### Pin Assignment (Coordinated with EPS Board)
+> **Canonical reference:** `system/interfaces/cskb_pinmap.md` is the
+> authoritative pin map for the centisat stack. The table below is a
+> board-local view and must match that file. Update the canonical
+> file first if anything here needs to change.
 
-The EPS board defines the power and I2C pins on the a-row (a1–a12).
-The comms board connects to these same pins as a **consumer**. Additional
-comms-specific signals use higher-numbered pins.
+Pin numbers follow the Pumpkin CubeSat Kit Motherboard H1/H2 CSKB
+convention (DS_CSK_MB_710-00484-E.pdf, doc Rev. A, March 2012,
+pp. 13–16). The comms board uses only the subset it needs; all other
+H1/H2 pins are left unconnected on this board but must remain in the
+bus routing for other subsystems.
 
-| Pin | Net Name | Direction (Comms Board) | Function |
-|---|---|---|---|
-| a1 | `+3V3` | Power In | 3.3V regulated rail (from EPS) |
-| a2 | `+3V3` | Power In | 3.3V (parallel for current sharing) |
-| a3 | `GND` | Power | Ground return for 3.3V |
-| a4 | `+5V` | Power In | 5.0V regulated rail (from EPS) |
-| a5 | `+5V` | Power In | 5.0V (parallel for current sharing) |
-| a6 | `GND` | Power | Ground return for 5V |
-| a7 | `VBAT` | Power In | Unregulated battery bus (monitor only) |
-| a8 | `GND` | Power | Ground return for VBAT |
-| a9 | `I2C_SCL` | Bidirectional | Shared I2C clock bus |
-| a10 | `I2C_SDA` | Bidirectional | Shared I2C data bus |
-| a11 | `SMBALERT_N` | Input | EPS charger alert (active-low) |
-| a12 | `GND` | Power | Ground (signal reference) |
-| a13–a30 | Reserved | — | TBD (FC signals, payload, spares) |
-| b1–b30 | Reserved | — | TBD |
+| Pin | Pumpkin name | centisat net | Direction (Comms) | Function |
+|---|---|---|---|---|
+| H1.16 | `IO.8` | `COMMS_IRQ` | Out | Data-ready interrupt to FC (active-low, push-pull) |
+| H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | In | SPI clock from FC |
+| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | Out | SPI data, comms → FC |
+| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | In | SPI data, FC → comms |
+| H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | In | SPI chip select from FC |
+| H1.41 | `SDA_SYS` | `I2C_SDA` | Bidirectional | Shared housekeeping I2C data |
+| H1.43 | `SCL_SYS` | `I2C_SCL` | Bidirectional | Shared housekeeping I2C clock |
+| H1.49 | `USER2` | `EPS_ALERT_N` | (not used on comms) | EPS LTC4162 alert — consumed by FC only |
+| H2.25 | `+5V_SYS` | `+5V` | Power In | 5 V stack rail (from EPS) |
+| H2.26 | `+5V_SYS` | `+5V` | Power In | 5 V (parallel for current sharing) |
+| H2.27 | `VCC_SYS` | `+3V3` | Power In | 3.3 V stack rail (from EPS) |
+| H2.28 | `VCC_SYS` | `+3V3` | Power In | 3.3 V (parallel for current sharing) |
+| H2.29 | `DGND` | `GND` | Power | Digital ground return |
+| H2.30 | `DGND` | `GND` | Power | Digital ground return |
+| H2.31 | `AGND` | `GND` | Power | Analog ground (tied to GND single plane) |
+| H2.32 | `DGND` | `GND` | Power | Digital ground return (third DGND pin) |
+| H2.45 | `VBATT` | `VBAT` | Power In (monitor only) | Battery bus for ADC telemetry |
+| H2.46 | `VBATT` | `VBAT` | Power In (monitor only) | Battery bus (parallel) |
 
-#### Note (Place > Note, next to PCI-104):
+All other H1/H2 pins are reserved or left unconnected on the comms
+board.
 
-> PCI-104 stack connector: Samtec MMS-130-02-L-DV-A (2×30, 2.00mm,
-> through-hole socket). Pin assignment coordinated with EPS board —
-> a1–a12 are defined by the EPS and carry power rails, ground returns,
-> and I2C bus. The comms board is a power CONSUMER on all power pins.
-> Power pins are doubled (a1/a2 for 3.3V, a4/a5 for 5V) with adjacent
-> GND returns for low-impedance current paths. VBAT (a7) is available
-> for battery voltage monitoring via RP2040 ADC if needed, but is not
-> used for powering any comms circuitry. I2C bus is shared with the
-> EPS LTC4162 (addr 0x68) and the comms Si5351A (addr 0x60) — no
-> address conflict. Full pin map must be coordinated across all
-> subsystem boards before final PCB layout.
+#### Note (Place > Note, next to CSKB connectors):
+
+> CSKB stack connectors: 2× Samtec ESQ-126-39-G-D (2×26, 0.1″
+> (2.54 mm), stackthrough headers, one each for H1 and H2). Pin
+> assignment locked to the Pumpkin CSKB H1/H2 convention — all
+> boards in the centisat stack (EPS, FC, comms, payload) use the
+> same H1/H2 pin numbers for the same signal classes. The comms
+> board is a power CONSUMER on all power pins and a SPI SLAVE to
+> the FC. COMMS_IRQ (H1.16) is driven by the comms RP2040 as a
+> data-ready interrupt to the FC. I2C is shared between EPS
+> LTC4162 (0x68) and comms Si5351A (0x60) — no address conflict.
+> See `system/interfaces/cskb_pinmap.md` for the full canonical
+> pin map.
 
 #### Bulk Bypass at Stack Connector
 
-Place bypass caps physically close to the PCI-104 connector pads:
+Place bypass caps physically close to the CSKB H2 connector pads:
 
 | Ref | Value | Package | Connection | Purpose |
 |---|---|---|---|---|
@@ -1547,22 +1596,26 @@ analyzer or oscilloscope connection during integration testing.
 │  [Text Frame: Connectors Description]                                │
 │                                                                      │
 │  ┌─────────────────────────────────┐     ┌──────────┐                │
-│  │ J1: MMS-130-02-L-DV-A          │     │ J4: SMA  │                │
-│  │ PCI-104 (2x30, 2mm, J1 only)   │     │ TX OUT   │ ← TX_OUT port │
+│  │ J1 (H1+H2): 2× ESQ-126-39-G-D   │     │ J4: SMA  │                │
+│  │ CSKB (2×26 stackthrough, 0.1″)  │     │ TX OUT   │ ← TX_OUT port │
 │  │                                 │     └──────────┘                │
-│  │ a1,a2  +3V3  ──→ C41,C42       │                                 │
-│  │ a3     GND                      │     ┌──────────┐                │
-│  │ a4,a5  +5V   ──→ C43,C44       │     │ J5: SMA  │                │
-│  │ a6     GND                      │     │ RX IN    │ ← RX_IN port  │
-│  │ a7     VBAT  (monitor only)     │     └──────────┘                │
-│  │ a8     GND                      │                                 │
-│  │ a9     I2C_SCL ──→ port         │                                 │
-│  │ a10    I2C_SDA ──→ port         │                                 │
-│  │ a11    SMBALERT_N               │                                 │
-│  │ a12    GND                      │                                 │
-│  │ a13-a30, b1-b30  (reserved)     │                                 │
+│  │ H1.16  COMMS_IRQ  ←── GP3       │                                 │
+│  │ H1.21  SPI_SCK    ──→ GP18      │     ┌──────────┐                │
+│  │ H1.22  SPI_MISO   ←── GP16      │     │ J5: SMA  │                │
+│  │ H1.23  SPI_MOSI   ──→ GP19      │     │ RX IN    │ ← RX_IN port  │
+│  │ H1.24  SPI_CS_N   ──→ GP17      │     └──────────┘                │
+│  │ H1.41  SDA_SYS    ──→ I2C_SDA   │                                 │
+│  │ H1.43  SCL_SYS    ──→ I2C_SCL   │                                 │
+│  │ H1.49  EPS_ALERT_N (not used)   │                                 │
+│  │ H2.25/26  +5V   ──→ C43,C44     │                                 │
+│  │ H2.27/28  +3V3  ──→ C41,C42     │                                 │
+│  │ H2.29/30  DGND                  │                                 │
+│  │ H2.31     AGND                  │                                 │
+│  │ H2.32     DGND                  │                                 │
+│  │ H2.45/46  VBAT (monitor only)   │                                 │
+│  │ (other H1/H2 pins reserved)     │                                 │
 │  └─────────────────────────────────┘                                 │
-│  [J2 footprint: DNP for prototype]                                   │
+│  [H1 and H2 populated; 15 mm stacking per cskb_pinmap.md]            │
 │                                                                      │
 │  ┌──────────────────────────────────────────┐    ┌────────────────┐  │
 │  │ Test Points                               │    │ Debug Header  │  │
@@ -1579,12 +1632,18 @@ analyzer or oscilloscope connection during integration testing.
 
 - [ ] `TX_OUT` — input, from TX Chain (to TX SMA J4)
 - [ ] `RX_IN` — output, from RX SMA J5 (to RX Chain)
-- [ ] `I2C_SCL` — bidirectional, to PCI-104 bus (a9)
-- [ ] `I2C_SDA` — bidirectional, to PCI-104 bus (a10)
-- [ ] `+3V3` — power port, from PCI-104 (a1, a2)
-- [ ] `+5V` — power port, from PCI-104 (a4, a5)
-- [ ] `GND` — power port, from PCI-104 (a3, a6, a8, a12)
-- [ ] `VBAT` — power port, from PCI-104 (a7) — monitor only
+- [ ] `I2C_SCL` — bidirectional, to CSKB bus (H1.43)
+- [ ] `I2C_SDA` — bidirectional, to CSKB bus (H1.41)
+- [ ] `COMMS_IRQ` — output, to CSKB bus (H1.16) from Digital Control GP3
+- [ ] `SPI_COMMS_SCK` — input, from CSKB bus (H1.21) to Digital Control GP18
+- [ ] `SPI_COMMS_MISO` — output, to CSKB bus (H1.22) from Digital Control GP16
+- [ ] `SPI_COMMS_MOSI` — input, from CSKB bus (H1.23) to Digital Control GP19
+- [ ] `SPI_COMMS_CS_N` — input, from CSKB bus (H1.24) to Digital Control GP17
+- [ ] `EPS_ALERT_N` — input (reserved), from CSKB bus (H1.49) — not wired in v0.1
+- [ ] `+3V3` — power port, from CSKB (H2.27, H2.28)
+- [ ] `+5V` — power port, from CSKB (H2.25, H2.26)
+- [ ] `GND` — power port, from CSKB (H2.29, H2.30, H2.31 AGND, H2.32)
+- [ ] `VBAT` — power port, from CSKB (H2.45, H2.46) — monitor only
 
 ---
 ---
@@ -1730,7 +1789,7 @@ Save to `hardware/comms/releases/Comms_schematic_v0.2.pdf` for review.
 
 | Ref | Value | Description | Qty |
 |---|---|---|---|
-| J1 | Samtec MMS-130-02-L-DV-A | PCI-104 2×30 socket, 2.00mm | 1 |
+| J1 (H1 + H2) | 2× Samtec ESQ-126-39-G-D | CSKB 2×26 stackthrough socket, 0.1″ (2.54 mm), one each for H1 and H2 | 2 |
 | J4 | SMA, female, edge-launch | TX antenna connector | 1 |
 | J5 | SMA, female, edge-launch | RX antenna connector | 1 |
 | J6 | 1×6 header (optional) | Debug signal header | 0–1 |
@@ -1748,7 +1807,7 @@ These are the key design decisions. Place a condensed version in the
 title block "Notes" field or as a text frame on the Top sheet.
 
 1. **Architecture:** 70cm BPSK TX / 2m AFSK RX, single PCB, RP2040 controller
-2. **Power:** All regulated power (+3V3, +5V) from EPS via PCI-104 bus connector.
+2. **Power:** All regulated power (+3V3, +5V) from EPS via CSKB bus connector.
    No on-board regulators in stack configuration.
 3. **Clock gen:** Si5351A, CLK0=145.67 MHz (TX, tripled to 437 MHz),
    CLK1=145.9 MHz (RX LO). Both within Si5351A spec (<200 MHz).
@@ -1764,8 +1823,12 @@ title block "Notes" field or as a text frame on the Top sheet.
    LTspice verified: 1200 Hz at -0.56 dB, 2200 Hz at -1.75 dB.
 9. **Gain stage:** MCP6022 non-inverting, gain=11 (20.8 dB), mid-supply
    bias at 1.65V.
-10. **PCI-104 connector:** Samtec MMS-130-02-L-DV-A, pin assignment
-    coordinated with EPS board (a1–a12 defined).
+10. **CSKB connectors:** 2× Samtec ESQ-126-39-G-D (2×26, 0.1″ stackthrough),
+    populated at H1 (signals) and H2 (power). Pin assignment follows
+    Pumpkin CubeSat Kit Bus per `system/interfaces/cskb_pinmap.md`
+    (datasheet Rev. E pp. 13–16). COMMS_IRQ on H1.16, SPI on
+    H1.21/22/23/24, I2C on H1.41/43, +5V on H2.25/26, +3V3 on H2.27/28,
+    DGND on H2.29/30/32, AGND on H2.31, VBAT on H2.45/46.
 11. **RF connectors:** Separate TX/RX SMA, no diplexer for prototype.
 12. **All RF filter caps must be C0G/NP0** — X7R is voltage-dependent
     and detunes filters at RF.

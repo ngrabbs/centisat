@@ -20,6 +20,7 @@ ownership expectations for each link.
 |---|---|---|---|
 | `COMMS_EN` | Out | Enable/disable comms board operation | Provisional |
 | `COMMS_FAULT_N` | In | Comms fault indication to FC | Provisional |
+| `COMMS_IRQ` | In | Comms data-ready / packet-available signal to FC (active-low, FC ISR triggers SPI read) | Provisional |
 | `EPS_ALERT_N` | In | EPS fault/alert line to FC | Provisional |
 | `PAYLOAD_EN` | Out | Payload power/operation gating | Provisional |
 

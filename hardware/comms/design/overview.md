@@ -576,7 +576,7 @@ Notes:
 │         │  RP2040 / Pico    Si5351A            │     │
 │         │  I2C   SPI   GPIO   UART             │     │
 │         └──────────────────────────────────────┘     │
-│  [PCI-104 connector / stack header]                  │
+│  [CSKB H1 + H2 stack connectors]                    │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -597,8 +597,8 @@ Notes:
 
 ### PCB Constraints
 - **Impedance:** 50Ω microstrip on top layer (calculate trace width for your stackup)
-- **Board size:** Must fit PCI-104 or CubeSat stack form factor (~90 × 96 mm max for PC/104, or custom to fit 1U ~100 × 100 mm)
-- **Connectors:** 1× SMA (antenna) or 2× SMA (if no diplexer), PCI-104 stack header, optional debug header
+- **Board size:** Must fit CubeSat Kit stack form factor (~90 × 96 mm max, or custom to fit 1U ~100 × 100 mm)
+- **Connectors:** 1× SMA (antenna) or 2× SMA (if no diplexer), CSKB H1 + H2 stack connectors, optional debug header
 
 ---
 
@@ -640,7 +640,7 @@ Notes:
 
 ### Connectors / Mechanical
 - SMA edge-mount (1 or 2)
-- PCI-104 stack header (if using CubeSat stack)
+- CSKB H1 + H2 stack headers (2× Samtec ESQ-126-39-G-D, per `system/interfaces/cskb_pinmap.md`)
 - Optional shield cans (recommended over tripler and Si5351 sections)
 - Test points on key RF nodes (Si5351 output, tripler output, post-BPF, modulator output, MMIC output, SA612 baseband)
 

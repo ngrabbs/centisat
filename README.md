@@ -92,7 +92,6 @@ hardware/
   flight_controller/{design,kicad,bringup,releases}
   comms/{design,kicad,bom,bringup,releases}
   payload/{design,kicad,bringup,releases}
-  pci104/{template,proto}
   pv_panel/{design,kicad,manufacturing,releases}
   CAD/
 

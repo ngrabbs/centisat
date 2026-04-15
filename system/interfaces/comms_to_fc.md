@@ -29,8 +29,13 @@ logic.
 
 ## Provisional Signal Set
 
-- SPI: `SCLK`, `MOSI`, `MISO`, `CS_N`, optional `IRQ_N`
-- CAN: `CANH`, `CANL`, `GND`
+- SPI (FC master, comms slave): `SPI_COMMS_SCK` (CSKB H1.21),
+  `SPI_COMMS_MOSI` (H1.23), `SPI_COMMS_MISO` (H1.22),
+  `SPI_COMMS_CS_N` (H1.24)
+- Data-ready interrupt: `COMMS_IRQ` (CSKB H1.16) — driven by comms
+  RP2040 GP3 (push-pull, active-low, normally high); triggers FC ISR
+  to service the SPI slave FIFO. Pull-up lives on FC side (R11, 10k).
+- CAN (Iteration 2): `CANH`, `CANL`, `GND`
 - Optional control: `COMMS_EN`, `COMMS_FAULT_N`
 
 ## Provisional Timing and Throughput Targets
