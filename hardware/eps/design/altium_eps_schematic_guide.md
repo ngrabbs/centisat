@@ -149,14 +149,14 @@ Figure 8 and the discussion on pages 33–34.
 
 | Ref | Value | Package | Connection | Purpose |
 |---|---|---|---|---|
-| R1 | 2.5 Ohm, 1%, 1/4W | 0805 | Series: `SOLAR_BUS` → `VIN_CHG` | Impedance flattening |
+| R1 | 2.7 Ohm, 1%, 1/4W | 0805 | Series: `SOLAR_BUS` → `VIN_CHG` | Impedance flattening (datasheet target ~2.5Ω, 2.7Ω is nearest common E24 value) |
 | C1 | 150uF, 25V, Al-polymer | Radial or SMD | `SOLAR_BUS` to `GND` | Impedance comp, parallel with panel |
 | C2 | 0.1uF, 50V, X7R ceramic | 0402 or 0603 | `VIN_CHG` to `GND` | HF bypass at LTC4162 VIN |
 
 #### Circuit
 
 ```
-SOLAR_BUS ──→ R1 (2.5 Ohm) ──→ VIN_CHG ──→ to LTC4162 VIN (pin 7)
+SOLAR_BUS ──→ R1 (2.7 Ohm) ──→ VIN_CHG ──→ to LTC4162 VIN (pin 7)
                 │                     │
                C1 (150uF)           C2 (0.1uF)
                 │                     │
@@ -166,7 +166,7 @@ SOLAR_BUS ──→ R1 (2.5 Ohm) ──→ VIN_CHG ──→ to LTC4162 VIN (pin
 #### Note (Place > Note, next to R1/C1):
 
 > Solar panel impedance compensation per LTC4162-L datasheet Fig. 8.
-> 2.5 Ohm + 150uF maintains ~2.5 Ohm real impedance in the 1–10kHz band
+> 2.7 Ohm + 150uF maintains ~2.7 Ohm real impedance in the 1–10kHz band
 > where the MPPT loop operates. Required for panels with high dynamic
 > impedance in the constant-current region. The 150uF should be solid
 > polymer or aluminum-polymer (not wet electrolytic) for stable ESR
@@ -673,6 +673,13 @@ Ven_fall = 1.17 V, Ven_rise = 1.21 V):
 > (single divider, both EN pins tap the same midpoint) — the EN
 > hysteresis currents are summed and the resulting threshold shift is
 > well within budget for this conservative target.
+>
+> **Cross-reference:** the EN midpoint net (R20 bottom / R21 top /
+> U2 pin 2 / U3 pin 2) is labeled `BUCK_EN` and also appears on
+> Sheet 4, where the `JP_RBF` Remove-Before-Flight jumper is wired
+> across R21. Installing `JP_RBF` shorts R21 → forces `BUCK_EN` to
+> GND → disables both bucks → kills the entire bus. See Sheet 4
+> Section A.
 
 ---
 
@@ -1120,7 +1127,211 @@ on opposite sides of the board.
 ---
 ---
 
-## After All Three Sheets Are Done
+## Sheet 4: Inhibits & RBF
+
+### Text Frame (Place > Text Frame, top of sheet):
+
+> **EPS Sheet 4 — Inhibits & RBF (v0.1 proto)**
+>
+> This sheet collects all of centisat's safety interlocks in one
+> place: the Remove-Before-Flight pin and the two deployment
+> inhibits. On the v0.1 proto board, all three are **1×2 pin header
+> jumpers** — a pull-pin RBF and real separation switches will
+> replace them on a later flight spin.
+>
+> Convention: **jumper installed = safe/inhibited, jumper pulled =
+> armed/running.** Applies to all three jumpers on this sheet. The
+> `JP1` jumper on the FC board (WDT Disable) uses the same
+> convention.
+>
+> See `docs/architecture/inhibit_and_deployment.md` for the full
+> policy, the polarity-flip note for real flight switches, and the
+> list of what still needs to happen before flight.
+
+---
+
+### Section A: JP_RBF — Remove-Before-Flight (Left Half of Sheet)
+
+#### What it does
+
+`JP_RBF` is a 1×2 pin header wired **across R21** (the bottom leg of
+the shared EN UVLO divider on Sheet 2). When the jumper is installed,
+R21 is shorted out → the buck EN midpoint collapses to GND → both
+TPS62933F bucks (U2/U3) are disabled → `+3V3` and `+5V` are dead →
+the entire satellite bus is dead. When the jumper is pulled, R21 is
+back in the divider and normal UVLO behavior resumes.
+
+Important: the LTC4162 charger on Sheet 1 is **upstream** of the
+bucks and is **not** gated by `JP_RBF`. Solar → charger → battery
+remains alive with the RBF pin installed, so the battery can top off
+during pre-launch integration and on the pad. This matches CDS §3.2
+intent ("charging circuit stays alive while RBF is in").
+
+#### Components
+
+| Ref | Value | Package | Connection |
+|---|---|---|---|
+| JP_RBF | 1×2 pin header, 2.54 mm | THT | Pin 1 = buck EN midpoint (same net as R20 bottom / R21 top / U2 pin 2 / U3 pin 2); Pin 2 = `GND` |
+
+#### Placement
+
+Put `JP_RBF` physically adjacent to the R20/R21 UVLO divider on the
+PCB, and label it clearly on silk:
+
+> **RBF — REMOVE BEFORE FLIGHT**
+> Installed = satellite bus OFF (charging still active).
+> Pulled    = satellite bus ON.
+
+Also add a bright red silkscreen border or "RBF" marker so a
+reviewer can see it at a glance during integration.
+
+#### Note (Place > Note, next to JP_RBF):
+
+> **JP_RBF — Remove Before Flight pin (v0.1 proto jumper).**
+>
+> Wired across R21 (Sheet 2, shared EN UVLO divider). Jumper
+> installed = R21 shorted = buck EN forced low = +3V3 and +5V rails
+> OFF. Jumper removed = normal UVLO operation = bus ON.
+>
+> The LTC4162 charger is upstream of the bucks and is NOT affected
+> by JP_RBF. Battery charging from solar continues while RBF is
+> installed, so the battery can top off during integration and on
+> the launch pad.
+>
+> This is a proto-only implementation. The flight version will
+> replace this jumper with a physical pull-pin through the chassis,
+> with the same "installed = safe, pulled = armed" convention. See
+> `docs/architecture/inhibit_and_deployment.md`.
+
+---
+
+### Section B: JP_INH1 / JP_INH2 — Deployment Inhibits (Right Half of Sheet)
+
+#### What they do
+
+`JP_INH1` and `JP_INH2` are **two independent** 1×2 pin header
+jumpers that both gate a single net, `DEPLOY_ARMED`. Either jumper,
+installed on its own, is enough to force `DEPLOY_ARMED` low and
+inhibit the satellite. Both must be removed for the satellite to
+arm. This gives us two independent hardware inhibits on the proto,
+matching the "either switch alone keeps us inhibited" fail-safe
+direction of the eventual flight separation switches.
+
+#### Circuit
+
+```
+            +3V3
+              │
+            [R50]  10 kΩ pull-up
+              │
+    DEPLOY_ARMED ──┬────────────→ to Section C fan-out (COMMS_TX_EN, BURN_EN)
+                   │
+                   ├── JP_INH1 ── GND       (installed = pulls net to GND)
+                   │
+                   └── JP_INH2 ── GND       (installed = pulls net to GND)
+```
+
+With both jumpers removed, the 10 kΩ pull-up holds `DEPLOY_ARMED`
+high (armed). With either jumper installed, that jumper shorts the
+net to GND (inhibited) regardless of the other jumper's state. The
+logic is: `DEPLOY_ARMED = (JP_INH1 removed) AND (JP_INH2 removed)`.
+
+#### Components
+
+| Ref | Value | Package | Connection |
+|---|---|---|---|
+| JP_INH1 | 1×2 pin header, 2.54 mm | THT | Pin 1 = `DEPLOY_ARMED`; Pin 2 = `GND` |
+| JP_INH2 | 1×2 pin header, 2.54 mm | THT | Pin 1 = `DEPLOY_ARMED`; Pin 2 = `GND` |
+| R50 | 10 kΩ, 1% | 0402 | `+3V3` to `DEPLOY_ARMED` (pull-up) |
+
+#### Placement
+
+Place `JP_INH1` and `JP_INH2` side-by-side, clearly separated from
+`JP_RBF` so there is no confusion at integration. Silkscreen:
+
+> **INH1 / INH2 — DEPLOYMENT INHIBITS**
+> Both installed = TX + deployables OFF (ground handling).
+> Both pulled   = TX + deployables ARMED.
+> Either one alone is enough to keep the satellite inhibited.
+
+#### Note (Place > Note, next to JP_INH1 / JP_INH2):
+
+> **JP_INH1 / JP_INH2 — Deployment inhibit jumpers (v0.1 proto).**
+>
+> Both jumpers gate the `DEPLOY_ARMED` net in parallel. Either one
+> installed forces `DEPLOY_ARMED` low via a direct short to GND,
+> overriding R50's pull-up. Both must be removed for the satellite
+> to arm.
+>
+> `DEPLOY_ARMED` fans out on this sheet to gate `COMMS_TX_EN` and
+> `BURN_EN` (Section C). The intent is that TX and burn-wire
+> deployables cannot activate while either jumper is present,
+> regardless of firmware state.
+>
+> **Polarity note for future-you:** on the flight version, these
+> jumpers get replaced by 2× series normally-closed separation
+> microswitches that the P-POD rails hold open while stowed. On
+> ejection, both switches close, completing the circuit and
+> allowing `DEPLOY_ARMED` to rise. Electrically that is the
+> **inverse** of the proto jumpers (proto = short-to-GND when
+> inhibited; flight = open-circuit when inhibited) even though the
+> *meaning* of the net is unchanged. See
+> `docs/architecture/inhibit_and_deployment.md` for the full
+> write-up.
+
+---
+
+### Section C: DEPLOY_ARMED Fan-Out (Bottom of Sheet)
+
+`DEPLOY_ARMED` drives two downstream enable nets:
+
+- **`COMMS_TX_EN`** — gates the comms board TX power amplifier
+  enable. Exits Sheet 4 via a port and is carried on CSKB to the
+  comms board. Comms TX PA is only allowed to energize when
+  `COMMS_TX_EN` is high.
+- **`BURN_EN`** — gates the antenna burn-wire deploy load switch.
+  Burn-wire MOSFET (TBD on a future sheet or add-in board) only
+  conducts when `BURN_EN` is high.
+
+For v0.1 proto, the simplest implementation is a hard net tie:
+`COMMS_TX_EN = DEPLOY_ARMED` and `BURN_EN = DEPLOY_ARMED`, with the
+actual TX PA and burn-wire load switches living on their respective
+boards and accepting `DEPLOY_ARMED` as their hardware enable input.
+No AND gate, no buffer — just a labeled net exit on Sheet 4.
+
+Future-spin improvement: add a 74LVC2G08 dual AND gate so
+`DEPLOY_ARMED` is combined with a firmware arm signal
+(`FW_DEPLOY_ARMED`) from the EPS MCU before driving `COMMS_TX_EN` and
+`BURN_EN`. That would add a firmware arm as the third CDS inhibit.
+Not in v0.1 — see the open items in
+`docs/architecture/inhibit_and_deployment.md`.
+
+#### Note (Place > Note, near the DEPLOY_ARMED net label):
+
+> `DEPLOY_ARMED` exits this sheet to `COMMS_TX_EN` (CSKB to comms
+> board) and `BURN_EN` (burn-wire load switch, TBD). For v0.1
+> proto, both downstream nets are wired directly to `DEPLOY_ARMED`
+> with no intermediate gating. A future spin may insert a firmware
+> arm via a 2-input AND gate.
+
+---
+
+### Sheet 4 Ports Checklist
+
+- [ ] `+3V3` — power entry (from Sheet 2), for R50 pull-up
+- [ ] `GND` — power entry, for jumper return paths
+- [ ] `DEPLOY_ARMED` — internal net label (no off-sheet port — fans out on this sheet)
+- [ ] `COMMS_TX_EN` — output, exits to Sheet 3 CSKB port entries (TBD CSKB pin, not yet allocated — see `system/interfaces/cskb_pinmap.md` open item)
+- [ ] `BURN_EN` — output, exits to burn-wire driver (TBD — not on any current sheet)
+
+Note: Sheet 4 has a **cross-sheet tie** to Sheet 2. The `JP_RBF`
+jumper pin 1 is the same net as the R20/R21 EN midpoint on Sheet 2.
+Use a matching net label (e.g. `BUCK_EN`) on both sheets so Altium's
+ERC ties them together on compile.
+
+---
+
+## After All Four Sheets Are Done
 
 ### 1. Annotate
 
@@ -1141,12 +1352,12 @@ Project > Compile PCB Project. Check the Messages panel for:
 
 On each sheet, double-click the title block and fill in:
 
-| Field | Sheet 1 | Sheet 2 | Sheet 3 |
-|---|---|---|---|
-| Title | CubeSat EPS — Solar Input & Charger | CubeSat EPS — Regulation | CubeSat EPS — Connectors & Telemetry |
-| Revision | 0.2 | 0.2 | 0.2 |
-| Drawn By | Nick Grabbs | Nick Grabbs | Nick Grabbs |
-| Date | (today) | (today) | (today) |
+| Field | Sheet 1 | Sheet 2 | Sheet 3 | Sheet 4 |
+|---|---|---|---|---|
+| Title | CubeSat EPS — Solar Input & Charger | CubeSat EPS — Regulation | CubeSat EPS — Connectors & Telemetry | CubeSat EPS — Inhibits & RBF |
+| Revision | 0.2 | 0.2 | 0.2 | 0.2 |
+| Drawn By | Nick Grabbs | Nick Grabbs | Nick Grabbs | Nick Grabbs |
+| Date | (today) | (today) | (today) | (today) |
 
 ### 4. Export PDF
 
@@ -1163,7 +1374,7 @@ Save to `hardware/eps/releases/EPS_schematic_v0.1.pdf` for review.
 |---|---|---|---|
 | J1–J4 | JST-PH 2-pin | Solar face connectors | 4 |
 | D1–D4 | SS14 or B5819W | Blocking Schottky diodes, >= 30V/500mA | 4 |
-| R1 | 2.5 Ohm, 1%, 1/4W | Impedance comp resistor | 1 |
+| R1 | 2.7 Ohm, 1%, 1/4W (E24) | Impedance comp resistor | 1 |
 | C1 | 150uF, 25V, Al-polymer | Impedance comp cap | 1 |
 | C2 | 0.1uF, 50V, X7R | VIN HF bypass | 1 |
 | U1 | LTC4162EUFD-LADM#PBF | MPPT charger IC, QFN-28 | 1 |
@@ -1223,6 +1434,15 @@ Save to `hardware/eps/releases/EPS_schematic_v0.1.pdf` for review.
 | C63 | 100nF, 16V, X7R | 5V HF bypass at connector | 1 |
 | TP1–TP8 | Test point pads | Probe points | 8 |
 
+### Sheet 4: Inhibits & RBF
+
+| Ref | Value | Description | Qty |
+|---|---|---|---|
+| JP_RBF | 1×2 pin header, 2.54 mm | THT | Remove-Before-Flight jumper (across R21) | 1 |
+| JP_INH1 | 1×2 pin header, 2.54 mm | THT | Deployment inhibit jumper #1 | 1 |
+| JP_INH2 | 1×2 pin header, 2.54 mm | THT | Deployment inhibit jumper #2 | 1 |
+| R50 | 10 kΩ, 1% | 0402 | DEPLOY_ARMED pull-up to +3V3 | 1 |
+
 ---
 
 ## Design Notes Summary (For Title Block or Separate Note Sheet)
@@ -1254,6 +1474,16 @@ on Sheet 1.
     bench flexibility, actual solar current is ~80mA
 12. **I2C level**: DVCC = INTVCC (~5V). FC must be 5V-tolerant or use
     level shifter. Open integration item.
+13. **Inhibits & RBF (Sheet 4)**: Three 1×2 pin header jumpers on the
+    v0.1 proto board — `JP_RBF` (across R21, kills buck EN midpoint
+    → kills bus, leaves charger alive), `JP_INH1` and `JP_INH2`
+    (parallel pull-downs on `DEPLOY_ARMED`, either one inhibits
+    `COMMS_TX_EN` + `BURN_EN`). Convention: installed = safe/inhibited,
+    pulled = armed/running. Flight version replaces the inhibit
+    jumpers with 2× series NC separation switches (polarity inverts,
+    meaning unchanged) and `JP_RBF` with a physical pull-pin through
+    the chassis. Full policy and breadcrumb in
+    `docs/architecture/inhibit_and_deployment.md`.
 
 ---
 
@@ -1265,5 +1495,6 @@ on Sheet 1.
 - TPSM5D1806 datasheet (deprecated for this design): `hardware/eps/components/TPSM5D1806/tpsm5d1806.pdf`
 - EPS architecture: `hardware/eps/design/overview.md`
 - EPS interfaces: `hardware/eps/design/interfaces.md`
+- Inhibit & deployment policy: `docs/architecture/inhibit_and_deployment.md`
 - Bring-up plan: `hardware/eps/bringup/phase1_validation.md`
 - Comms board Altium guide (reference format): `hardware/comms/design/altium_digital_power_sheets.md`

@@ -42,7 +42,7 @@ STWD100NYWY3F Hardware Watchdog
      │
      ├── WDI ←── GP22 (must be toggled within window)
      ├── WDO_N ──→ Pico RUN (resets MCU on timeout)
-     └── EN_N ── JP1 "RBF / Disable Watchdog" jumper
+     └── EN_N ── JP1 "WDT Disable (Bench)" jumper
                   (jumper installed = WDT disabled, bench mode;
                    jumper REMOVED = WDT enabled, FLIGHT mode)
 
@@ -68,7 +68,9 @@ Key design decisions:
 4. **External hardware watchdog (STWD100NYWY3F)** with a removable
    "Disable Watchdog" jumper (`JP1`). Jumper installed = bench/debug
    mode (WDT disabled), jumper removed = flight mode (WDT enabled). This
-   matches the RT-IHU's RBF-style WDT enable jumper. WDO_N drives the
+   matches the RT-IHU's WDT enable jumper pattern. This is NOT the
+   satellite's RBF — see `docs/architecture/inhibit_and_deployment.md`
+   for the real RBF pin (`JP_RBF` on the EPS board). WDO_N drives the
    Pico RUN pin so a missed feed forces a hard reset.
 5. **No on-board RTC** — matches RT-IHU. Mission time is maintained as
    an MCU uptime counter, persisted to MRAM at boot, and ground-synced
@@ -104,7 +106,7 @@ Key design decisions:
 2. Add six schematic sheets (flat design):
    - `Overview.SchDoc` — title sheet, block diagram, design notes (non-electrical)
    - `MCU_Core.SchDoc` — Pico module, decoupling, status LEDs
-   - `Memory_WDT.SchDoc` — MR25H40 MRAM, STWD100 watchdog, RBF jumper
+   - `Memory_WDT.SchDoc` — MR25H40 MRAM, STWD100 watchdog, WDT Disable jumper
    - `Interfaces.SchDoc` — I2C to EPS, SPI to comms, UART debug, control/fault GPIOs, CAN stub
    - `Power.SchDoc` — input protection, +5V→VSYS Schottky, bypass
    - `Connectors_Debug.SchDoc` — CSKB H1 + H2 stack connectors (Pumpkin pin map), debug header, spare GPIO header
@@ -240,7 +242,7 @@ Place a large text frame across the top of the sheet:
 │  │ UART0 ────→ Debug     │                          │         │         │
 │  │ GPIO ─────→ WDT_FEED ─┼──→ STWD100 ───── WDO_N ──┘         │         │
 │  │ GPIO ─────→ LEDs      │      ▲                                       │
-│  │ GPIO ─────→ ctrl/flt  │      │ JP1 (RBF jumper)                      │
+│  │ GPIO ─────→ ctrl/flt  │      │ JP1 (WDT Disable, bench only)         │
 │  │                       │      │ installed=disable, removed=flight     │
 │  └───────────────────────┘                                              │
 │                                                                          │
@@ -307,7 +309,7 @@ Place a large text frame across the top of the sheet:
 > 1. Power from EPS via CSKB — no on-board regulators (Pico LDO only)
 > 2. Raspberry Pi Pico module for v0.1 (matches comms board pattern)
 > 3. MR25H40 SPI MRAM for persistent state (matches AMSAT RT-IHU)
-> 4. External STWD100 hardware watchdog with RBF-style enable jumper
+> 4. External STWD100 hardware watchdog with bench-mode enable jumper
 >    (jumper installed = WDT disabled, removed = flight mode)
 > 5. No on-board RTC — uptime counter in MRAM, ground-synced
 > 6. CSKB pin map adopted verbatim from Pumpkin CubeSat Kit Bus spec for
@@ -325,7 +327,7 @@ Place a large text frame across the top of the sheet:
 > |-------|-------|----------|
 > | 1 | Overview | This sheet — block diagram, design notes |
 > | 2 | MCU Core | Pico module, decoupling, status LEDs |
-> | 3 | Memory & WDT | MR25H40 MRAM, STWD100 watchdog, RBF jumper |
+> | 3 | Memory & WDT | MR25H40 MRAM, STWD100 watchdog, WDT Disable jumper |
 > | 4 | Interfaces | I2C, SPI, UART, control/fault GPIOs, CAN stub |
 > | 5 | Power | Input Schottky, bypass, distribution |
 > | 6 | Connectors & Debug | CSKB H1 + H2, debug header, spare GPIO header |
@@ -553,7 +555,9 @@ flight enable jumper. Both ICs are on the Pico-sourced +3V3 rail.
 > the MCU fails to toggle WDT_FEED within the watchdog window. JP1
 > (Disable Watchdog) is a removable jumper — installed for bench/debug
 > (WDT disabled), removed for flight (WDT enabled). This matches the
-> AMSAT RT-IHU primary_power.kicad_sch RBF watchdog pattern.
+> AMSAT RT-IHU primary_power.kicad_sch WDT-disable jumper pattern.
+> Note: this jumper is NOT the satellite RBF — RBF lives on the EPS
+> board (`JP_RBF`), see `docs/architecture/inhibit_and_deployment.md`.
 
 ---
 
@@ -672,19 +676,19 @@ JP1 pin 2 ── EN_N│  WDO_N ─┘
 
 ---
 
-### Section C: Watchdog Enable Jumper / RBF (Bottom-Center)
+### Section C: Watchdog Enable Jumper (Bottom-Center)
 
 This is the critical bench-vs-flight switch. JP1 is a 1×2 pin header —
 when a shorting jumper is installed across the two pins, it pulls
 `WDT_EN_BAR` low and **disables** the watchdog (bench/debug mode). When
-the jumper is **removed** ("remove before flight"), the EN_N input is
+the jumper is **removed** (flight mode), the EN_N input is
 pulled high through R8 and the watchdog is **enabled** (flight mode).
 
 #### Components
 
 | Ref | Part | Package | Connection | Purpose |
 |---|---|---|---|---|
-| JP1 | 1×2 pin header, 2.54mm | THT | Pin 1 = GND, Pin 2 = STWD100 EN_N | Disable Watchdog jumper |
+| JP1 | 1×2 pin header, 2.54mm | THT | Pin 1 = GND, Pin 2 = STWD100 EN_N | WDT Disable (Bench) jumper — NOT the satellite RBF |
 | R8 | 10 kΩ, 1% | 0402 | STWD100 EN_N to +3V3 | Pull-up so removed jumper = enabled |
 
 ```
@@ -709,7 +713,10 @@ State table:
 
 #### Note (Place > Note, next to JP1, label clearly on silk):
 
-> **DISABLE WATCHDOG (JP1) — REMOVE BEFORE FLIGHT.**
+> **WDT DISABLE (JP1) — REMOVE FOR FLIGHT OPERATION.**
+>
+> This is NOT the satellite RBF pin. RBF lives on the EPS board
+> (`JP_RBF`). This jumper only gates the STWD100 hardware watchdog.
 >
 > This jumper matches the AMSAT RT-IHU `JP1 Disable Watchdog`
 > implementation on the primary_power.kicad_sch sheet (see
@@ -1535,7 +1542,7 @@ for review.
 | R6 | 10 kΩ, 1% | 0402 | MRAM CS_N idle pull-up |
 | R7 | 10 kΩ, 1% | 0402 | Pico RUN / WDO_N pull-up |
 | R8 | 10 kΩ, 1% | 0402 | STWD100 EN_N pull-up (default to enabled) |
-| JP1 | 1×2 pin header, 2.54 mm | THT | Disable Watchdog (RBF) |
+| JP1 | 1×2 pin header, 2.54 mm | THT | WDT Disable (Bench) — not RBF |
 
 ### Sheet 4: Interfaces
 
