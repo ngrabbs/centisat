@@ -107,6 +107,29 @@ bool ltc4162_set_jeita_enabled(i2c_inst_t *i2c, uint8_t addr, bool enabled);
  * the thermistor, etc.). Idempotent and safe to call at any time. */
 bool ltc4162_kick(i2c_inst_t *i2c, uint8_t addr);
 
+/* Software workaround for boards without a working NTC thermistor
+ * circuit. The chip's hardware ntc_pause exit condition is
+ * `jeita_t6 < thermistor_voltage < jeita_t1` — even with
+ * en_jeita = 0, the chip still gates ntc_pause on these thresholds.
+ *
+ * When `enabled = true`, this widens the JEITA temperature window to
+ * the full int16 range:
+ *   jeita_t1 = INT16_MAX (no reading is colder)
+ *   jeita_t6 = INT16_MIN (no reading is hotter)
+ * so any thermistor_voltage that passes the hardware open_thermistor
+ * check (< 21684) lets the chip exit ntc_pause and start charging.
+ *
+ * When `enabled = false`, restores the datasheet defaults:
+ *   jeita_t1 = 16117 (~0 °C)
+ *   jeita_t6 = 4970  (~60 °C)
+ *
+ * Note: the hardware open_thermistor check (thermistor_voltage > 21684)
+ * is in the chip silicon and CANNOT be bypassed. You still need
+ * something on the NTC pin that puts its voltage below open_thermistor.
+ * Even a single resistor to GND (without a matching NTCBIAS resistor)
+ * gives a thermistor_voltage near 0, which is below 21684. */
+bool ltc4162_set_ntc_bypass(i2c_inst_t *i2c, uint8_t addr, bool enabled);
+
 /* Read all telemetry registers into `out`. Returns false on any I2C
  * transaction error; in that case `out` is left untouched. */
 bool ltc4162_read_telemetry(i2c_inst_t *i2c, uint8_t addr,

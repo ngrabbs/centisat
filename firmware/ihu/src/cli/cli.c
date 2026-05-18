@@ -41,18 +41,20 @@ static void cmd_help(int argc, char *argv[]);
 static void cmd_stats(int argc, char *argv[]);
 static void cmd_eps(int argc, char *argv[]);
 static void cmd_kick(int argc, char *argv[]);
+static void cmd_ntc_bypass(int argc, char *argv[]);
 static void cmd_quiet(int argc, char *argv[]);
 static void cmd_loud(int argc, char *argv[]);
 static void cmd_reboot(int argc, char *argv[]);
 
 static const cli_command_t cli_commands[] = {
-    { "help",   "list available commands",                       cmd_help   },
-    { "stats",  "uptime, task count, free heap",                 cmd_stats  },
-    { "eps",    "EPS telemetry  (eps raw  for register dump)",   cmd_eps    },
-    { "kick",   "pulse suspend_charger to restart LTC4162 state machine", cmd_kick },
-    { "quiet",  "suppress periodic heartbeat + telemetry print", cmd_quiet  },
-    { "loud",   "re-enable periodic background output",          cmd_loud   },
-    { "reboot", "soft-reset the IHU via the watchdog",           cmd_reboot },
+    { "help",       "list available commands",                       cmd_help       },
+    { "stats",      "uptime, task count, free heap",                 cmd_stats      },
+    { "eps",        "EPS telemetry  (eps raw  for register dump)",   cmd_eps        },
+    { "kick",       "pulse suspend_charger to restart LTC4162",      cmd_kick       },
+    { "ntc-bypass", "ntc-bypass on|off — widen jeita to bypass NTC", cmd_ntc_bypass },
+    { "quiet",      "suppress periodic heartbeat + telemetry print", cmd_quiet      },
+    { "loud",       "re-enable periodic background output",          cmd_loud       },
+    { "reboot",     "soft-reset the IHU via the watchdog",           cmd_reboot     },
 };
 #define CLI_NUM_COMMANDS (sizeof(cli_commands) / sizeof(cli_commands[0]))
 
@@ -108,6 +110,8 @@ static void cmd_eps(int argc, char *argv[]) {
     if (raw) {
         printf("LTC4162 raw registers (addr=0x%02X):\n", IHU_EPS_LTC4162_ADDR);
         dump_ltc4162_register(0x14, "config_bits");
+        dump_ltc4162_register(0x1F, "jeita_t1");
+        dump_ltc4162_register(0x24, "jeita_t6");
         dump_ltc4162_register(0x29, "chgr_config_bits");
         dump_ltc4162_register(0x34, "charger_state");
         dump_ltc4162_register(0x35, "charge_status");
@@ -121,7 +125,8 @@ static void cmd_eps(int argc, char *argv[]) {
         dump_ltc4162_register(0x40, "thermistor_v");
         dump_ltc4162_register(0x42, "jeita_region");
         printf("  (thermistor_v > 21684 = open_thermistor -> ntc_pause)\n");
-        printf("  (valid jeita range: 4970 < thermistor_v < 16117)\n");
+        printf("  (defaults: jeita_t1=16117, jeita_t6=4970)\n");
+        printf("  (ntc-bypass on: jeita_t1=0x7FFF=32767, jeita_t6=0x0001=1)\n");
         return;
     }
 
@@ -162,6 +167,29 @@ static void cmd_kick(int argc, char *argv[]) {
         printf("LTC4162 kicked — suspend_charger pulsed, state machine re-evaluating\n");
     } else {
         printf("LTC4162 kick I2C write failed\n");
+    }
+}
+
+static void cmd_ntc_bypass(int argc, char *argv[]) {
+    if (argc < 2 || (strcmp(argv[1], "on") != 0 && strcmp(argv[1], "off") != 0)) {
+        printf("usage: ntc-bypass on|off\n");
+        printf("  on  : widen jeita_t1/t6 to int16 range — NTC reading\n");
+        printf("        always satisfies the ntc-pause exit condition\n");
+        printf("  off : restore datasheet defaults (jeita_t1=16117, jeita_t6=4970)\n");
+        printf("note: thermistor_voltage must still be < 21684 to pass the\n");
+        printf("      hardware open_thermistor check. A resistor on NTC->GND\n");
+        printf("      is enough; matched RNTCBIAS not required for bypass.\n");
+        return;
+    }
+    bool enable = (strcmp(argv[1], "on") == 0);
+    if (ltc4162_set_ntc_bypass(IHU_I2C_EPS_INSTANCE,
+                               IHU_EPS_LTC4162_ADDR, enable)) {
+        printf("NTC bypass %s — kicking charger to re-evaluate\n",
+               enable ? "ENABLED (jeita window widened)"
+                      : "DISABLED (defaults restored)");
+        ltc4162_kick(IHU_I2C_EPS_INSTANCE, IHU_EPS_LTC4162_ADDR);
+    } else {
+        printf("ntc-bypass write failed\n");
     }
 }
 

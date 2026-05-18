@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -12,10 +13,16 @@
  * Register addresses (LTC4162-L datasheet Rev. F, Table 1)
  * ----------------------------------------------------------------*/
 #define REG_CONFIG_BITS          0x14   /* CONFIG_BITS_REG — R/W */
+#define REG_JEITA_T1             0x1F   /* JEITA cold-side threshold — R/W */
+#define REG_JEITA_T6             0x24   /* JEITA hot-side threshold  — R/W */
 #define REG_CHARGER_CONFIG_BITS  0x29   /* CHARGER_CONFIG_BITS_REG — R/W */
 #define REG_CHARGER_STATE        0x34   /* enum active state */
 #define REG_CHARGE_STATUS        0x35   /* enum charge-loop status */
 #define REG_SYSTEM_STATUS        0x39   /* system-level status bits */
+
+/* Datasheet defaults for jeita_t1 and jeita_t6 (table 6, p. 25). */
+#define JEITA_T1_DEFAULT         16117  /* ~0 °C breakpoint  */
+#define JEITA_T6_DEFAULT         4970   /* ~60 °C breakpoint */
 #define REG_VBAT             0x3A   /* battery voltage telemetry */
 #define REG_VIN              0x3B   /* input voltage telemetry */
 #define REG_VOUT             0x3C   /* output voltage telemetry */
@@ -107,6 +114,24 @@ bool ltc4162_set_jeita_enabled(i2c_inst_t *i2c, uint8_t addr, bool enabled) {
         val &= (uint16_t)~CHG_CFG_EN_JEITA;
     }
     return write_word(i2c, addr, REG_CHARGER_CONFIG_BITS, val);
+}
+
+bool ltc4162_set_ntc_bypass(i2c_inst_t *i2c, uint8_t addr, bool enabled) {
+    /* Use values that satisfy `jeita_t1 > thermistor_voltage > jeita_t6`
+     * for any sane thermistor_voltage reading, in BOTH signed and
+     * unsigned interpretations of the comparison:
+     *   t1 = 0x7FFF = 32767     (max positive in either interpretation)
+     *   t6 = 0x0001 = 1         (smallest positive, lower than any
+     *                            realistic thermistor_voltage reading;
+     *                            avoids 0 in case the chip does
+     *                            strict-greater-than)
+     * The chip's ADC won't physically read negative thermistor_voltage,
+     * so anything above 0 is fine for the lower bound. */
+    uint16_t t1 = enabled ? 0x7FFFu : (uint16_t)JEITA_T1_DEFAULT;
+    uint16_t t6 = enabled ? 0x0001u : (uint16_t)JEITA_T6_DEFAULT;
+    if (!write_word(i2c, addr, REG_JEITA_T1, t1)) return false;
+    if (!write_word(i2c, addr, REG_JEITA_T6, t6)) return false;
+    return true;
 }
 
 bool ltc4162_kick(i2c_inst_t *i2c, uint8_t addr) {
