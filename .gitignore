@@ -43,3 +43,10 @@ ehthumbs.db
 Thumbs.db
 .claude
 .vscode
+
+# Weekly progress updates for the team — kept local, not pushed
+docs/weekly_updates/
+
+# Senior design coursework + reviewer feedback — local-only working copies
+# (final design doc, poster source, instructor templates, reviewer notes)
+docs/senior_design/
