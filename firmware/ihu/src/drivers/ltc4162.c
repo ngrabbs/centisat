@@ -11,10 +11,11 @@
 /* ------------------------------------------------------------------
  * Register addresses (LTC4162-L datasheet Rev. F, Table 1)
  * ----------------------------------------------------------------*/
-#define REG_CONFIG_BITS      0x14   /* CHARGER_CONFIG_BITS — R/W */
-#define REG_CHARGER_STATE    0x34   /* one-hot active state */
-#define REG_CHARGE_STATUS    0x35   /* charge-loop status flags */
-#define REG_SYSTEM_STATUS    0x39   /* system-level status */
+#define REG_CONFIG_BITS          0x14   /* CONFIG_BITS_REG — R/W */
+#define REG_CHARGER_CONFIG_BITS  0x29   /* CHARGER_CONFIG_BITS_REG — R/W */
+#define REG_CHARGER_STATE        0x34   /* enum active state */
+#define REG_CHARGE_STATUS        0x35   /* enum charge-loop status */
+#define REG_SYSTEM_STATUS        0x39   /* system-level status bits */
 #define REG_VBAT             0x3A   /* battery voltage telemetry */
 #define REG_VIN              0x3B   /* input voltage telemetry */
 #define REG_VOUT             0x3C   /* output voltage telemetry */
@@ -28,6 +29,11 @@
 #define CFG_TELEMETRY_SPEED_HIGH (1u << 3)  /* 1 = ~10 Hz, 0 = ~0.2 Hz */
 #define CFG_RUN_BSR              (1u << 4)
 #define CFG_SUSPEND_CHARGER      (1u << 5)
+
+/* CHARGER_CONFIG_BITS_REG (0x29) — bit positions per datasheet p. 42.
+ * Defaults: en_jeita=1, en_c_over_x_term=0. */
+#define CHG_CFG_EN_JEITA         (1u << 0)
+#define CHG_CFG_EN_C_OVER_X_TERM (1u << 2)
 
 /* ------------------------------------------------------------------
  * LSB scaling factors (LTC4162-L datasheet Rev. F, Table 2)
@@ -88,6 +94,36 @@ bool ltc4162_init(i2c_inst_t *i2c, uint8_t addr) {
      * (all zero). Side effect: writing CONFIG_BITS clears latched
      * fault state from any prior charger session. */
     return write_word(i2c, addr, REG_CONFIG_BITS, CFG_FORCE_TELEMETRY_ON);
+}
+
+bool ltc4162_set_jeita_enabled(i2c_inst_t *i2c, uint8_t addr, bool enabled) {
+    uint16_t val;
+    if (!read_word(i2c, addr, REG_CHARGER_CONFIG_BITS, &val)) {
+        return false;
+    }
+    if (enabled) {
+        val |= CHG_CFG_EN_JEITA;
+    } else {
+        val &= (uint16_t)~CHG_CFG_EN_JEITA;
+    }
+    return write_word(i2c, addr, REG_CHARGER_CONFIG_BITS, val);
+}
+
+bool ltc4162_kick(i2c_inst_t *i2c, uint8_t addr) {
+    /* Read current CONFIG_BITS so we preserve force_telemetry_on,
+     * MPPT, etc. — only briefly assert suspend_charger on top. */
+    uint16_t base;
+    if (!read_word(i2c, addr, REG_CONFIG_BITS, &base)) {
+        return false;
+    }
+    if (!write_word(i2c, addr, REG_CONFIG_BITS, base | CFG_SUSPEND_CHARGER)) {
+        return false;
+    }
+    /* 100 ms is plenty for the state machine to register the
+     * suspend transition. Block-sleep here: this function is
+     * meant to be called from a normal task context. */
+    sleep_ms(100);
+    return write_word(i2c, addr, REG_CONFIG_BITS, base & (uint16_t)~CFG_SUSPEND_CHARGER);
 }
 
 bool ltc4162_read_telemetry(i2c_inst_t *i2c, uint8_t addr,

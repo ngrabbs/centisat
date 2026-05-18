@@ -89,6 +89,24 @@ bool ltc4162_present(i2c_inst_t *i2c, uint8_t addr);
  * if the write was ACKed. */
 bool ltc4162_init(i2c_inst_t *i2c, uint8_t addr);
 
+/* Enable or disable the JEITA temperature-qualified charging system.
+ *
+ * Default-on at chip power-up. The chip refuses to enter cc_cv_charge
+ * if the NTC pin reading is outside the JEITA temperature window —
+ * which on a board with no thermistor populated means the charger
+ * sits in ntc_pause forever. For bench bring-up without a thermistor,
+ * call with `enabled = false`. Re-enable once a real NTC is wired.
+ *
+ * Read-modify-write — preserves other bits in CHARGER_CONFIG_BITS_REG. */
+bool ltc4162_set_jeita_enabled(i2c_inst_t *i2c, uint8_t addr, bool enabled);
+
+/* Force the charger state machine to re-evaluate by pulsing the
+ * suspend_charger bit (set, brief delay, clear). Useful for shaking
+ * the chip out of a latched non-charging state like ntc_pause after
+ * fixing the underlying condition (e.g. disabling JEITA, swapping
+ * the thermistor, etc.). Idempotent and safe to call at any time. */
+bool ltc4162_kick(i2c_inst_t *i2c, uint8_t addr);
+
 /* Read all telemetry registers into `out`. Returns false on any I2C
  * transaction error; in that case `out` is left untouched. */
 bool ltc4162_read_telemetry(i2c_inst_t *i2c, uint8_t addr,

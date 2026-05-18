@@ -24,6 +24,7 @@
 #include "pico/stdlib.h"
 
 #include "config/pinmap.h"
+#include "cli/cli.h"
 #include "tasks/blink_task.h"
 #include "tasks/console_task.h"
 #include "tasks/eps_monitor_task.h"
@@ -35,6 +36,7 @@
 #define IHU_TASK_PRIORITY_BLINK   (tskIDLE_PRIORITY + 1)
 #define IHU_TASK_PRIORITY_CONSOLE (tskIDLE_PRIORITY + 1)
 #define IHU_TASK_PRIORITY_EPS     (tskIDLE_PRIORITY + 1)
+#define IHU_TASK_PRIORITY_CLI     (tskIDLE_PRIORITY + 2)  /* one above the periodic tasks */
 
 /* Pre-scheduler "we got here" blink: 3 slow on/off pulses on GP25. */
 static void pre_scheduler_led_check(void) {
@@ -89,6 +91,10 @@ int main(void) {
     }
     if (ihu_eps_monitor_task_start(IHU_TASK_PRIORITY_EPS) != pdPASS) {
         printf("[ihu][FATAL] eps monitor task creation failed\n");
+        panic_blink_forever();
+    }
+    if (ihu_cli_task_start(IHU_TASK_PRIORITY_CLI) != pdPASS) {
+        printf("[ihu][FATAL] cli task creation failed\n");
         panic_blink_forever();
     }
 

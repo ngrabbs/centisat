@@ -10,6 +10,11 @@
 #define CONSOLE_TASK_STACK_WORDS 512
 #define CONSOLE_TASK_NAME       "console"
 
+static volatile bool s_quiet = false;
+
+void ihu_console_set_quiet(bool quiet) { s_quiet = quiet; }
+bool ihu_console_is_quiet(void)        { return s_quiet; }
+
 static void console_task(void *pvParameters) {
     (void)pvParameters;
 
@@ -21,16 +26,17 @@ static void console_task(void *pvParameters) {
 
     uint32_t tick = 0;
     for (;;) {
-        TickType_t uptime_ticks = xTaskGetTickCount();
-        uint32_t uptime_ms = (uint32_t)(uptime_ticks * portTICK_PERIOD_MS);
-        UBaseType_t task_count = uxTaskGetNumberOfTasks();
+        if (!s_quiet) {
+            TickType_t uptime_ticks = xTaskGetTickCount();
+            uint32_t uptime_ms = (uint32_t)(uptime_ticks * portTICK_PERIOD_MS);
+            UBaseType_t task_count = uxTaskGetNumberOfTasks();
 
-        printf("[ihu] heartbeat #%lu  uptime=%lu ms  tasks=%lu  free_heap=%u\n",
-               (unsigned long)tick++,
-               (unsigned long)uptime_ms,
-               (unsigned long)task_count,
-               (unsigned)xPortGetFreeHeapSize());
-
+            printf("[ihu] heartbeat #%lu  uptime=%lu ms  tasks=%lu  free_heap=%u\n",
+                   (unsigned long)tick++,
+                   (unsigned long)uptime_ms,
+                   (unsigned long)task_count,
+                   (unsigned)xPortGetFreeHeapSize());
+        }
         vTaskDelay(pdMS_TO_TICKS(CONSOLE_PERIOD_MS));
     }
 }

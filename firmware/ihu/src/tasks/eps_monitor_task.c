@@ -17,6 +17,27 @@
 #define EPS_TASK_STACK_WORDS    768       /* printf with floats eats stack */
 #define EPS_TASK_NAME           "eps-mon"
 
+/* Snapshot of the latest valid telemetry read, for the CLI to
+ * consume on demand. `s_have_snapshot` flips to true after the
+ * first successful poll and never flips back — the contents may
+ * be stale if the chip later disappears, but the values remain
+ * the last known good ones. Reads and writes are word-sized on
+ * RP2040 and the snapshot is only updated from the eps task, so
+ * the race window is harmless for a diagnostic getter. */
+static ltc4162_telemetry_t s_last_telemetry;
+static volatile bool        s_have_snapshot = false;
+static volatile bool        s_quiet         = false;
+
+bool ihu_eps_get_latest_telemetry(ltc4162_telemetry_t *out) {
+    if (!s_have_snapshot) {
+        return false;
+    }
+    *out = s_last_telemetry;
+    return true;
+}
+
+void ihu_eps_set_quiet(bool quiet) { s_quiet = quiet; }
+
 /* ------------------------------------------------------------------
  * One-shot bus diagnostics — useful at boot, then we stop scanning.
  * ----------------------------------------------------------------*/
@@ -67,17 +88,21 @@ static void print_telemetry(const ltc4162_telemetry_t *t) {
     printf("[ltc4162]   I_IN=%+7.1f mA  I_BAT=%+7.1f mA  (positive = charging)\n",
            t->i_in_ma, t->i_bat_ma);
 
-    /* Surface system_status conditions. cell_count_err and no_rt
-     * intentionally suppressed here — per datasheet pp. 44-45 both
-     * assert any time the charger isn't enabled (e.g. battery-only
-     * operation), so they're noise unless VIN is actually present. */
+    /* Always-meaningful alerts first. */
     if (t->system_status & LTC4162_SYS_THERMAL_SHUTDOWN) {
         printf("[ltc4162]   ALERT: thermal shutdown\n");
     }
     if (t->system_status & LTC4162_SYS_VIN_OVLO) {
         printf("[ltc4162]   ALERT: VIN over-voltage lockout (>38.6V)\n");
     }
-    if (t->system_status & LTC4162_SYS_VIN_GT_VBAT) {
+
+    /* cell_count_err and no_rt always assert when the charger isn't
+     * "enabled" per the chip's internal definition — including the
+     * ntc_pause state where the charger is paused but not running.
+     * Gate on en_chg (system_status bit 8) so we only surface them
+     * when they reflect actual hardware problems, not "chip isn't
+     * actively running the switching regulator right now." */
+    if (t->system_status & LTC4162_SYS_EN_CHG) {
         if (t->system_status & LTC4162_SYS_CELL_COUNT_ERR) {
             printf("[ltc4162]   ALERT: cell-count mismatch (expected %dS)\n",
                    IHU_EPS_BATTERY_CELLS);
@@ -85,7 +110,7 @@ static void print_telemetry(const ltc4162_telemetry_t *t) {
         if (t->system_status & LTC4162_SYS_NO_RT) {
             printf("[ltc4162]   ALERT: no Rt resistor detected\n");
         }
-    } else {
+    } else if (!(t->system_status & LTC4162_SYS_VIN_GT_VBAT)) {
         printf("[ltc4162]   note: VIN <= VBAT, running on battery (no charge input)\n");
     }
 }
@@ -124,6 +149,26 @@ static void eps_monitor_task(void *pvParameters) {
         printf("[eps] LTC4162 init write FAILED — telemetry may stay at zero\n");
     }
 
+    /* Disable JEITA temperature-qualified charging — the v0.1 proto
+     * doesn't have a thermistor on NTC, so the chip would sit in
+     * ntc_pause forever. Remove this once a real thermistor is wired
+     * (and ideally make it a CLI command for runtime toggling). */
+    if (ltc4162_set_jeita_enabled(IHU_I2C_EPS_INSTANCE,
+                                  IHU_EPS_LTC4162_ADDR, false)) {
+        printf("[eps] JEITA disabled (no NTC thermistor on proto)\n");
+    } else {
+        printf("[eps] JEITA-disable write FAILED — chip may pause in ntc-pause\n");
+    }
+
+    /* Kick the charger state machine so it re-evaluates with the
+     * fresh JEITA setting (drops any latched ntc-pause from previous
+     * power cycles). */
+    if (ltc4162_kick(IHU_I2C_EPS_INSTANCE, IHU_EPS_LTC4162_ADDR)) {
+        printf("[eps] charger kicked — state machine re-evaluating\n");
+    } else {
+        printf("[eps] kick write FAILED\n");
+    }
+
     printf("[eps] starting telemetry poll @ %d s cadence\n",
            EPS_POLL_PERIOD_MS / 1000);
 
@@ -132,9 +177,13 @@ static void eps_monitor_task(void *pvParameters) {
         ltc4162_telemetry_t t;
         if (ltc4162_read_telemetry(IHU_I2C_EPS_INSTANCE,
                                    IHU_EPS_LTC4162_ADDR, &t)) {
-            printf("[ltc4162] poll #%lu\n", (unsigned long)poll);
-            print_telemetry(&t);
-        } else {
+            s_last_telemetry = t;
+            s_have_snapshot  = true;
+            if (!s_quiet) {
+                printf("[ltc4162] poll #%lu\n", (unsigned long)poll);
+                print_telemetry(&t);
+            }
+        } else if (!s_quiet) {
             printf("[ltc4162] poll #%lu — read failed (I2C error)\n",
                    (unsigned long)poll);
         }

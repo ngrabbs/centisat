@@ -5,6 +5,7 @@
 #   src/config/pinmap.h     board pin assignments + chip config
 #   src/tasks/*.{c,h}       FreeRTOS task implementations
 #   src/drivers/*.{c,h}     chip drivers — LTC4162 today, MR25H40/STWD100 later
+#   src/cli/*.{c,h}         interactive command-line interface
 
 add_executable(${ProjectName}
     main.c
@@ -12,6 +13,7 @@ add_executable(${ProjectName}
     tasks/blink_task.c
     tasks/eps_monitor_task.c
     drivers/ltc4162.c
+    cli/cli.c
 )
 
 # Stdio over UART (GP0 TX, GP1 RX, 115200 8N1 by default).
@@ -36,6 +38,7 @@ target_link_libraries(${ProjectName}
     pico_stdlib
     hardware_i2c
     hardware_gpio
+    hardware_watchdog       # cli 'reboot' command
     FreeRTOS-Kernel-Heap4
 )
 
