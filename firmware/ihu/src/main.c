@@ -26,7 +26,7 @@
 #include "config/pinmap.h"
 #include "tasks/blink_task.h"
 #include "tasks/console_task.h"
-#include "tasks/i2c_task.h"
+#include "tasks/eps_monitor_task.h"
 
 /* Task priorities — lowest to highest. tskIDLE_PRIORITY == 0.
  * All v0.1 tasks at the same low priority; round-robin time slicing
@@ -34,7 +34,7 @@
  * requirements (e.g., SPI link service). */
 #define IHU_TASK_PRIORITY_BLINK   (tskIDLE_PRIORITY + 1)
 #define IHU_TASK_PRIORITY_CONSOLE (tskIDLE_PRIORITY + 1)
-#define IHU_TASK_PRIORITY_I2C     (tskIDLE_PRIORITY + 1)
+#define IHU_TASK_PRIORITY_EPS     (tskIDLE_PRIORITY + 1)
 
 /* Pre-scheduler "we got here" blink: 3 slow on/off pulses on GP25. */
 static void pre_scheduler_led_check(void) {
@@ -87,8 +87,8 @@ int main(void) {
         printf("[ihu][FATAL] blink task creation failed\n");
         panic_blink_forever();
     }
-    if (ihu_i2c_task_start(IHU_TASK_PRIORITY_I2C) != pdPASS) {
-        printf("[ihu][FATAL] i2c task creation failed\n");
+    if (ihu_eps_monitor_task_start(IHU_TASK_PRIORITY_EPS) != pdPASS) {
+        printf("[ihu][FATAL] eps monitor task creation failed\n");
         panic_blink_forever();
     }
 

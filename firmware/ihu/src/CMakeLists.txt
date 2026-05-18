@@ -2,15 +2,16 @@
 #
 # Layout:
 #   src/main.c              entry point + task creation
-#   src/config/pinmap.h     board pin assignments
+#   src/config/pinmap.h     board pin assignments + chip config
 #   src/tasks/*.{c,h}       FreeRTOS task implementations
-#   src/drivers/*.{c,h}     (future) chip drivers — LTC4162, MR25H40, etc.
+#   src/drivers/*.{c,h}     chip drivers — LTC4162 today, MR25H40/STWD100 later
 
 add_executable(${ProjectName}
     main.c
     tasks/console_task.c
     tasks/blink_task.c
-    tasks/i2c_task.c
+    tasks/eps_monitor_task.c
+    drivers/ltc4162.c
 )
 
 # Stdio over UART (GP0 TX, GP1 RX, 115200 8N1 by default).
