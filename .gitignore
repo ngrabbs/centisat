@@ -50,3 +50,23 @@ docs/weekly_updates/
 # Senior design coursework + reviewer feedback — local-only working copies
 # (final design doc, poster source, instructor templates, reviewer notes)
 docs/senior_design/
+
+# Firmware build artifacts (CMake + Pico SDK output trees)
+# Any directory literally named "build" anywhere in firmware/, plus the
+# generated binaries themselves so they don't leak even if someone
+# builds in-tree.
+firmware/**/build/
+*.uf2
+*.elf
+*.elf.map
+*.hex
+*.bin
+# Keep .a out of git only inside firmware/ to avoid colliding with any
+# future hardware footprint libraries elsewhere.
+firmware/**/*.a
+firmware/**/*.o
+
+# IDE / editor scratch files commonly produced during firmware dev
+firmware/**/.vscode/
+firmware/**/compile_commands.json
+firmware/**/.cache/
