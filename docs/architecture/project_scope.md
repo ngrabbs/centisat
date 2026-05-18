@@ -3,7 +3,7 @@
 ## Team Mission
 
 This modular CubeSat senior design project is developed by a team across
-multiple subsystems (EPS, flight controller, communications, and payload).
+multiple subsystems (EPS, internal housekeeping unit, communications, and payload).
 
 ## Baseline Build (Current Senior Design)
 

@@ -1,8 +1,8 @@
-# Flight Controller Interfaces
+# Internal Housekeeping Unit Interfaces
 
 ## Scope
 
-Define the external interfaces for the flight-controller board and assign
+Define the external interfaces for the internal housekeeping unit board and assign
 ownership expectations for each link.
 
 ## Board-to-Board Interfaces
@@ -19,9 +19,9 @@ ownership expectations for each link.
 | Signal | Direction | Purpose | Status |
 |---|---|---|---|
 | `COMMS_EN` | Out | Enable/disable comms board operation | Provisional |
-| `COMMS_FAULT_N` | In | Comms fault indication to FC | Provisional |
-| `COMMS_IRQ` | In | Comms data-ready / packet-available signal to FC (active-low, FC ISR triggers SPI read) | Provisional |
-| `EPS_ALERT_N` | In | EPS fault/alert line to FC | Provisional |
+| `COMMS_FAULT_N` | In | Comms fault indication to IHU | Provisional |
+| `COMMS_IRQ` | In | Comms data-ready / packet-available signal to IHU (active-low, IHU ISR triggers SPI read) | Provisional |
+| `EPS_ALERT_N` | In | EPS fault/alert line to IHU | Provisional |
 | `PAYLOAD_EN` | Out | Payload power/operation gating | Provisional |
 
 ## Timing and Throughput Targets (Provisional)
@@ -29,13 +29,13 @@ ownership expectations for each link.
 - I2C target: 400 kHz fast mode for housekeeping telemetry
 - SPI target: 4 to 8 MHz initial operating range
 - CAN target (Iteration 2): 500 kbps classic CAN 2.0B
-- FC-comms heartbeat target: 100 ms nominal interval
+- IHU-comms heartbeat target: 100 ms nominal interval
 
 ## Ownership Rules
 
-- FC is system command authority and state-machine owner
+- IHU is system command authority and state-machine owner
 - Comms RP2040 owns RF framing/modulation and radio-local timing
-- EPS telemetry source remains EPS-side hardware path, consumed by FC
+- EPS telemetry source remains EPS-side hardware path, consumed by IHU
 
 ## Interface Closure Checklist
 
@@ -46,6 +46,6 @@ ownership expectations for each link.
 
 ## Related Documents
 
-- FC architecture: `hardware/flight_controller/design/overview.md`
-- FC-comms details: `system/interfaces/comms_to_fc.md`
+- IHU architecture: `hardware/ihu/design/overview.md`
+- IHU-comms details: `system/interfaces/comms_to_ihu.md`
 - Global bus strategy: `system/interfaces/board_to_board.md`

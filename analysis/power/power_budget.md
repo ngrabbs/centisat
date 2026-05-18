@@ -59,18 +59,63 @@ and ~2% voltage increase.  This is the operating condition in orbit.
 
 ## 2 — Battery Parameters
 
-| Parameter                  | Value         | Notes                            |
-|----------------------------|---------------|----------------------------------|
-| Cell type                  | LG MJ1 18650  |                                  |
-| Configuration              | 2S2P          |                                  |
-| Nominal cell voltage       | 3.6 V         |                                  |
-| Pack nominal voltage       | 7.2 V         | 2S                               |
-| Cell capacity              | 3500 mAh      |                                  |
-| Pack capacity              | 7000 mAh (2P) | 50.4 Wh at nominal               |
-| Usable capacity (80→20%)   | 4200 mAh      | 60% DOD window                   |
-| Usable energy              | 30.2 Wh       | 4200 mAh × 7.2 V                |
-| Min SOC (requirement)      | 20%           |                                  |
-| Max charge rate            | 0.5C = 3.5 A  | LTC4162 limit: 3.2 A             |
+### Cell (LG INR18650 MJ1)
+
+| Parameter                  | Value      | Notes                                |
+|----------------------------|------------|--------------------------------------|
+| Chemistry                  | Li-ion NMC | Single cell, datasheet 25°C          |
+| Nominal voltage            | 3.635 V    | Datasheet — often rounded to 3.6 V   |
+| Max charge voltage         | 4.20 V     |                                      |
+| Discharge cut-off          | 2.50 V     |                                      |
+| Typical capacity           | 3500 mAh   | At 0.2C discharge, 25°C              |
+| Minimum capacity           | 3400 mAh   | Spec floor                           |
+| Typical energy per cell    | ~12.7 Wh   | 3500 mAh × 3.635 V                   |
+
+### Pack (2S2P)
+
+| Parameter                  | Value           | Notes                                |
+|----------------------------|-----------------|--------------------------------------|
+| Configuration              | 2S2P            | 4 cells total, 2 series × 2 parallel |
+| Pack nominal voltage       | 7.27 V          | 2 × 3.635 V (rounded to 7.2 V elsewhere in doc) |
+| Pack max voltage           | 8.40 V          | Fully charged, end of CV phase       |
+| Pack min voltage           | 5.00 V          | At cut-off                           |
+| Nameplate capacity         | 7000 mAh (typ)  | 2P at typical; 6800 mAh at spec floor |
+| Nameplate energy           | **50.4 Wh**     | 7000 mAh × 7.2 V (canonical for this doc) |
+| Max charge rate            | 3.2 A           | LTC4162 limit (cell-level ~0.46C, well under MJ1's 1C spec) |
+
+### Usable energy — what to actually budget against
+
+Nameplate is what you *have*; usable is what you can *spend* and still close the mission.
+
+| Scenario                       | Effective capacity | Energy   | When to use                          |
+|--------------------------------|--------------------|----------|--------------------------------------|
+| Nameplate (BOL, 25°C, 100% DoD) | 7000 mAh          | 50.4 Wh  | Marketing math only — never budget against this |
+| Requirement floor (100→20% DoD) | 5600 mAh          | 40.3 Wh  | Absolute worst-case ride-through (single deep eclipse, end of mission) |
+| **LEO cycling target (~30% DoD)** | **2100 mAh**    | **~15 Wh** | **Default per-orbit eclipse budget** — leaves room for 5000+ cycles of cycle life |
+| EOL nameplate (~80% retained)   | 5600 mAh          | ~40 Wh   | After ~1 yr LEO. Apply on top of DoD limits. |
+
+**The number to remember:** ~15 Wh of energy you can actually pull each eclipse without trashing the pack. Anything more is digging into cycle life or EOL margin.
+
+### Temperature derating
+
+LG MJ1 is rated at 25°C. On-orbit pack temps vary:
+
+| Condition       | Capacity retained | Note                                  |
+|-----------------|-------------------|---------------------------------------|
+| +25°C           | 100%              | Datasheet baseline                    |
+| 0°C             | ~90%              | Mild loss                             |
+| −10°C           | ~80%              | Significant — heaters become attractive |
+| −20°C           | ~65–70%           | Don't discharge here if avoidable     |
+| Below 0°C charge | Do not charge    | Plating risk. LTC4162 NTC should inhibit. |
+
+**Rule of thumb:** if the pack can drop below 0°C in eclipse, knock another 10–15% off the usable-energy numbers above when sizing for worst-case orbits.
+
+### Quick-reference summary
+
+- **Nameplate: 7.0 Ah / 50.4 Wh** at 7.2 V nominal
+- **Useful per eclipse (default budget): ~15 Wh** (30% DoD for cycle life)
+- **Hard floor (requirement): 40.3 Wh** (80% DoD, EOL, cold — only at end-of-mission worst case)
+- **Charge current cap: 3.2 A** (LTC4162-limited, not pack-limited)
 
 ---
 
@@ -82,8 +127,8 @@ Fill in measured or estimated current draw per subsystem at each rail.
 
 | Subsystem          | Mode     | Current (mA) | Power (mW) | Duty (%)  | Avg Power (mW) |
 |--------------------|----------|--------------|------------|-----------|-----------------|
-| Flight controller  | Active   |              |            | 100       |                 |
-| Flight controller  | Sleep    |              |            | 0         |                 |
+| Internal Housekeeping Unit  | Active   |              |            | 100       |                 |
+| Internal Housekeeping Unit  | Sleep    |              |            | 0         |                 |
 | Comms RX (SA612A)  | Listen   |              |            |           |                 |
 | Comms RP2040       | Active   |              |            |           |                 |
 | EPS telemetry I2C  | Active   |              |            | 100       |                 |
@@ -118,8 +163,8 @@ Define 3 modes for the power budget calculation:
 | Mode        | Description                         | 3.3V Load (mW) | 5V Load (mW) | Total at Bus (mW) |
 |-------------|-------------------------------------|-----------------|---------------|--------------------|
 | **Nominal** | All systems active, TX at duty cycle |                 |               |                    |
-| **RX-Only** | TX off, payload sampling, FC active  |                 |               |                    |
-| **Safe**    | FC + EPS telem only, 5V gated off   |                 |               |                    |
+| **RX-Only** | TX off, payload sampling, IHU active  |                 |               |                    |
+| **Safe**    | IHU + EPS telem only, 5V gated off   |                 |               |                    |
 
 ---
 

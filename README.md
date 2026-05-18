@@ -9,7 +9,7 @@ building, and validating a modular satellite architecture.
 This repository contains shared project artifacts across four primary subsystems:
 
 - Electrical Power System (EPS)
-- Flight Controller  
+- Internal Housekeeping Unit  
 - Communications Board (VHF/UHF)  
 - Payload Module  
 
@@ -83,13 +83,13 @@ firmware/
     rx/
     encoding/
     drivers/
-  flight_controller/
+  ihu/
   payload/
   common/
 
 hardware/
   eps/{design,kicad,components,bringup,releases}
-  flight_controller/{design,kicad,bringup,releases}
+  ihu/{design,kicad,bringup,releases}
   comms/{design,kicad,bom,bringup,releases}
   payload/{design,kicad,bringup,releases}
   pv_panel/{design,kicad,manufacturing,releases}
@@ -126,28 +126,28 @@ See `hardware/eps/design/overview.md` for architecture and
 
 ---
 
-## Flight Controller System (In Progress)
+## Internal Housekeeping Unit System (In Progress)
 
-The flight-controller board is an RP2040-based system orchestrator for command
+The internal housekeeping unit board is an RP2040-based system orchestrator for command
 authority, mode control, and telemetry aggregation.
 
 Current architecture includes:
 
 - RP2040 baseline controller for deterministic mode and command handling
 - I2C housekeeping path to EPS telemetry/control surfaces
-- SPI bidirectional data path between flight-controller and comms RP2040
+- SPI bidirectional data path between internal housekeeping unit and comms RP2040
 - Planned CAN control-plane expansion for multi-node subsystem coordination
 
 Development is focused on boot/recovery behavior, link supervision, and
 closing the command/telemetry loop before full subsystem integration.
 
-Provisional mode policy: flight controller boots in Safe mode and transitions
+Provisional mode policy: internal housekeeping unit boots in Safe mode and transitions
 to Nominal only after EPS I2C telemetry and comms SPI heartbeat are both
 healthy for consecutive checks.
 
-See `hardware/flight_controller/design/overview.md` for architecture,
-`hardware/flight_controller/design/interfaces.md` for interfaces, and
-`hardware/flight_controller/bringup/phase1_validation.md` for validation.
+See `hardware/ihu/design/overview.md` for architecture,
+`hardware/ihu/design/interfaces.md` for interfaces, and
+`hardware/ihu/bringup/phase1_validation.md` for validation.
 
 ---
 

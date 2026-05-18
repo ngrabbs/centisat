@@ -1,8 +1,8 @@
-# Flight Controller Phase 1 Validation Plan
+# Internal Housekeeping Unit Phase 1 Validation Plan
 
 ## Scope
 
-Phase 1 validates FC boot behavior, interface reliability, and basic
+Phase 1 validates IHU boot behavior, interface reliability, and basic
 command/telemetry loop closure before full system integration.
 
 ## Test 1: Boot and Reset Behavior
@@ -14,7 +14,7 @@ command/telemetry loop closure before full system integration.
 
 ### Procedure
 
-1. Power-cycle FC board repeatedly and log boot status
+1. Power-cycle IHU board repeatedly and log boot status
 2. Verify default mode is safe mode until subsystem links are healthy
 3. Trigger watchdog timeout intentionally and verify reset recovery path
 
@@ -27,9 +27,9 @@ Provisional healthy-link criteria for mode release:
 - Boot completes reliably across repeated power cycles
 - Reset reason is logged and exposed to diagnostics
 - Watchdog recovery returns board to known-safe state
-- FC remains in safe mode until both healthy-link criteria are met
+- IHU remains in safe mode until both healthy-link criteria are met
 
-## Test 2: FC <-> EPS Housekeeping Link (I2C)
+## Test 2: IHU <-> EPS Housekeeping Link (I2C)
 
 ### Objective
 
@@ -37,7 +37,7 @@ Provisional healthy-link criteria for mode release:
 
 ### Procedure
 
-1. Connect FC I2C bus to EPS telemetry path
+1. Connect IHU I2C bus to EPS telemetry path
 2. Poll telemetry registers at fixed interval (for example 5 to 10 Hz)
 3. Inject transient bus disturbance and verify retry behavior
 
@@ -47,15 +47,15 @@ Provisional healthy-link criteria for mode release:
 - Timeout/retry logic recovers from transient communication failures
 - Telemetry values pass range/sanity checks
 
-## Test 3: FC <-> Comms Data Link (SPI)
+## Test 3: IHU <-> Comms Data Link (SPI)
 
 ### Objective
 
-- Validate bidirectional packet exchange between FC RP2040 and comms RP2040
+- Validate bidirectional packet exchange between IHU RP2040 and comms RP2040
 
 ### Procedure
 
-1. Bring up SPI link with FC as master and comms as slave
+1. Bring up SPI link with IHU as master and comms as slave
 2. Exchange loopback packets with sequence counters and CRC
 3. Run sustained transfer test at target SPI clocks (4 to 8 MHz range)
 4. Inject framing faults and verify retry/timeout policy
@@ -70,11 +70,11 @@ Provisional healthy-link criteria for mode release:
 
 ### Objective
 
-- Verify FC command dispatch and telemetry aggregation flow end-to-end
+- Verify IHU command dispatch and telemetry aggregation flow end-to-end
 
 ### Procedure
 
-1. Inject representative command set to FC command parser
+1. Inject representative command set to IHU command parser
 2. Dispatch commands to subsystem interface handlers (EPS/comms stubs or live)
 3. Aggregate status into telemetry frames and forward to comms path
 
@@ -88,10 +88,10 @@ Provisional healthy-link criteria for mode release:
 
 - Save serial logs, trace captures, and failure-injection notes
 - Record firmware version/hash and test configuration
-- Store outputs under `hardware/flight_controller/bringup/` by date/revision
+- Store outputs under `hardware/ihu/bringup/` by date/revision
 
 ## Phase 1 Exit Condition
 
-- FC boots and recovers predictably
+- IHU boots and recovers predictably
 - I2C and SPI baseline links are repeatable and fault-tolerant
 - Command and telemetry loop is stable enough for broader integration testing

@@ -16,7 +16,7 @@ Define uplink command packet format, parsing behavior, and safety checks.
 
 ## Validation Policy (Provisional)
 
-- FC is authority for command acceptance/rejection decisions
+- IHU is authority for command acceptance/rejection decisions
 - Commands require valid CRC and known schema version
 - Unknown command IDs are rejected with explicit error code
 
@@ -28,8 +28,8 @@ Define uplink command packet format, parsing behavior, and safety checks.
 
 ## Transport Mapping
 
-- Uplink commands are decoded by comms and forwarded to FC
-- FC dispatches inter-board commands over SPI and/or CAN by destination
+- Uplink commands are decoded by comms and forwarded to IHU
+- IHU dispatches inter-board commands over SPI and/or CAN by destination
 - Safety-critical mode-change commands are mirrored in event log
 
 ## Safe-Mode Command Handling

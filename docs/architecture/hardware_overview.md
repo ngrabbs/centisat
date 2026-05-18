@@ -3,7 +3,7 @@
 ## Purpose
 
 Summarize current hardware baseline status across EPS, communications, payload,
-and flight controller paths.
+and internal housekeeping unit paths.
 
 ## Sections to Complete
 

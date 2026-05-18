@@ -2,12 +2,12 @@
 
 ## Scope
 
-Define a practical interconnect strategy for EPS, flight controller, and
+Define a practical interconnect strategy for EPS, internal housekeeping unit, and
 communications boards, with room to learn and apply CAN in the system.
 
 ## Design Constraints
 
-- Flight controller board baseline MCU: RP2040
+- Internal Housekeeping Unit board baseline MCU: RP2040
 - Communications board baseline MCU: RP2040 (local TX/RX control)
 - EPS currently centered on charger/regulation hardware (not a full digital node)
 - RP2040 has no native CAN peripheral, so CAN requires an external controller
@@ -24,38 +24,38 @@ communications boards, with room to learn and apply CAN in the system.
 ### SPI (High-Rate Deterministic Link)
 
 - Use for high-rate and deterministic board-to-board data exchange
-- Recommended near-term use: FC <-> Comms data path (telemetry buffers,
+- Recommended near-term use: IHU <-> Comms data path (telemetry buffers,
   payload chunks, firmware services if needed)
 
 ### CAN (System Control and Fault-Tolerant Messaging)
 
 - Use for board-level command/status messaging and subsystem state broadcast
-- Recommended learning target: FC + Comms + payload-side node(s)
+- Recommended learning target: IHU + Comms + payload-side node(s)
 - EPS can join later if/when a digital EPS controller node is added
 
 ## Iteration Plan
 
 ## Iteration 1 (Low Risk Bring-Up)
 
-- FC <-> EPS: I2C for charger telemetry + discrete fault/alert GPIO if needed
-- FC <-> Comms: SPI for primary data transfer
+- IHU <-> EPS: I2C for charger telemetry + discrete fault/alert GPIO if needed
+- IHU <-> Comms: SPI for primary data transfer
 - UART retained for debug/bring-up logs only
 
 Exit criteria:
-- FC reads charger telemetry reliably
-- FC and comms exchange packets over SPI without framing loss
+- IHU reads charger telemetry reliably
+- IHU and comms exchange packets over SPI without framing loss
 - Timeout/recovery behavior validated
 
 ## Iteration 2 (CAN Learning and Operational Integration)
 
-- Add CAN as control-plane bus between FC and comms, then payload node(s)
-- Keep SPI between FC and comms for bulk or time-critical data
+- Add CAN as control-plane bus between IHU and comms, then payload node(s)
+- Keep SPI between IHU and comms for bulk or time-critical data
 - Use CAN for heartbeat, mode control, health status, and fault broadcast
 
 Exit criteria:
 - Multi-node CAN traffic verified with clean arbitration behavior
 - Command/ack and heartbeat logic works under injected faults
-- FC can isolate a failed node while keeping remaining nodes operational
+- IHU can isolate a failed node while keeping remaining nodes operational
 
 ## Provisional CAN Implementation Notes
 
@@ -67,7 +67,7 @@ Exit criteria:
 
 ## Provisional Message Groups
 
-- `0x100-0x1FF`: flight-controller commands and mode requests
+- `0x100-0x1FF`: internal housekeeping unit commands and mode requests
 - `0x200-0x2FF`: EPS status/alerts (when EPS digital node exists)
 - `0x300-0x3FF`: communications status and queue state
 - `0x400-0x4FF`: payload status and control
@@ -75,6 +75,6 @@ Exit criteria:
 
 ## Related Documents
 
-- FC/comms details: `system/interfaces/comms_to_fc.md`
+- IHU/comms details: `system/interfaces/comms_to_ihu.md`
 - Data ownership and flows: `system/interfaces/data_interfaces.md`
 - System integration execution: `system/integration/integration_plan.md`

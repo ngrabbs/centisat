@@ -30,7 +30,7 @@ Solar (4x face PCBs, 4S SM141K10TF each)
               │            │            │
         ┌─────┴─────┐  ┌── ┴──────┐ ┌───┴──┐
         │ TPS62933F │  │TPS62933F │ │ I2C  │
-        │   3.3V    │  │   5.0V   │ │to FC │
+        │   3.3V    │  │   5.0V   │ │to IHU │
         │  500 kHz  │  │  500 kHz │ └──┬───┘
         └─────┬─────┘  └────┬─────┘    │
               │             │          │
@@ -75,8 +75,8 @@ symbols** (not net labels) for supply rails so they are global automatically.
 | `+3V3` | Power port | 3.3V regulated rail (global) |
 | `+5V` | Power port | 5.0V regulated rail (global) |
 | `GND` | Power port | Ground (global) |
-| `I2C_SCL` | Net label | I2C clock to flight controller |
-| `I2C_SDA` | Net label | I2C data to flight controller |
+| `I2C_SCL` | Net label | I2C clock to internal housekeeping unit |
+| `I2C_SDA` | Net label | I2C data to internal housekeeping unit |
 | `INTVCC` | Net label | LTC4162 internal 5V LDO output |
 | `VCC2P5` | Net label | LTC4162 internal 2.5V LDO output |
 | `DVCC` | Net label | LTC4162 I2C logic supply |
@@ -396,8 +396,8 @@ requires DVCC to be the same supply as the I2C pull-up resistors.
 #### Note (Place > Note, next to I2C pullups):
 
 > I2C address: 0x68 (7-bit). Up to 400kHz (Fast Mode).
-> DVCC = INTVCC (~5V) sets I2C logic levels. The flight controller
-> must be 5V-tolerant on I2C or use a level shifter. If FC runs at
+> DVCC = INTVCC (~5V) sets I2C logic levels. The internal housekeeping unit
+> must be 5V-tolerant on I2C or use a level shifter. If IHU runs at
 > 3.3V I2C, either: (a) connect DVCC to 3.3V instead of INTVCC
 > (works per datasheet if DVCC >= 2.667V), or (b) add a bidirectional
 > I2C level shifter. Decision TBD during integration — for now, wire
@@ -525,7 +525,7 @@ RT pin (datasheet Table 9-1). Rationale: 500 kHz is the lowest standard
 setting and gives the best efficiency, lowest switching losses, and
 the cleanest fundamental away from any sensitive baseband bands.
 The two converters are not synchronized — the RP2040 GPIOs on the
-flight-controller and comms boards filter their own supply locally,
+internal housekeeping unit and comms boards filter their own supply locally,
 so beat tones between the two buck stages are not a concern.
 
 ---
@@ -796,7 +796,7 @@ Sheet 2 Port Entries (Left Edge):
 
 > Note on PGOOD: the TPS62933F variant (SS pin) does not provide a
 > PGOOD output. If a power-good telemetry signal is required for the
-> flight controller, swap one or both stages to TPS62933P (PG pin)
+> internal housekeeping unit, swap one or both stages to TPS62933P (PG pin)
 > and route an open-drain PGOOD net to Sheet 3. For the prototype,
 > the LTC4162's I2C telemetry already exposes input/charger health
 > and is the primary monitoring path.
@@ -901,14 +901,14 @@ position, for a total of 104 pins per Pumpkin's CSKB layout.
 The EPS is the **stack endpoint** (acts as the motherboard), so it
 uses the non-stackthrough part (ESQ-126-37-G-D) per Pumpkin's
 footnote on page 17 of the Rev. E datasheet. All other boards in the
-centisat stack (FC, comms, payload) use the stackthrough variant
+centisat stack (IHU, comms, payload) use the stackthrough variant
 ESQ-126-39-G-D.
 
 Default stacking height is 15 mm between modules. If a module later
 needs taller clearance, Samtec SSQ-126-22-G-D 10 mm extensions can be
 inserted between specific interfaces for 24–25 mm spacing.
 
-The mating adjacent board (FC) uses ESQ-126-39-G-D (stackthrough) on
+The mating adjacent board (IHU) uses ESQ-126-39-G-D (stackthrough) on
 its own H1 and H2 positions.
 
 Search Manufacturer Part Search for "ESQ-126-37-G-D" or place a
@@ -936,7 +936,7 @@ compatibility with Pumpkin / MBM2 / iSpace hardware is preserved.
 | H1.41 | `SDA_SYS` | `I2C_SDA` | Bidirectional | Housekeeping I2C data (LTC4162 slave 0x68) |
 | H1.43 | `SCL_SYS` | `I2C_SCL` | Bidirectional | Housekeeping I2C clock |
 | H1.29 | `-RESET` | `SYS_RESET_N` | (not driven by EPS v0.1) | Stack reset line — reserved |
-| H1.49 | `USER2` | `EPS_ALERT_N` | Output (open-drain) | **LTC4162 `SMBALERT_N` → FC `EPS_ALERT_N`** — EPS charger alert / fault indication |
+| H1.49 | `USER2` | `EPS_ALERT_N` | Output (open-drain) | **LTC4162 `SMBALERT_N` → IHU `EPS_ALERT_N`** — EPS charger alert / fault indication |
 | H2.25 | `+5V_SYS` | `+5V` | Power Out | 5 V stack rail (from TPS62933F #1) |
 | H2.26 | `+5V_SYS` | `+5V` | Power Out | 5 V (parallel for current sharing) |
 | H2.27 | `VCC_SYS` | `+3V3` | Power Out | 3.3 V stack rail (from TPS62933F #2) |
@@ -948,7 +948,7 @@ compatibility with Pumpkin / MBM2 / iSpace hardware is preserved.
 | H2.45 | `VBATT` | `VBAT` | Power Out | Unregulated battery bus (6.0–8.4 V, monitor only on other boards) |
 | H2.46 | `VBATT` | `VBAT` | Power Out | Battery bus (parallel for current sharing) |
 
-All other H1/H2 pins are unused on the EPS board (reserved for FC
+All other H1/H2 pins are unused on the EPS board (reserved for IHU
 SPI, UART debug, COMMS_EN/FAULT, CAN stub, and future payload signals
 as defined in the canonical pin map).
 
@@ -964,7 +964,7 @@ EPS board only.
 > (2.54 mm), non-stackthrough through-hole socket, one each for H1
 > and H2). EPS is the stack endpoint — non-stackthrough is the
 > correct variant per Pumpkin datasheet Rev. E page 17. Mates with
-> ESQ-126-39-G-D (stackthrough) on the adjacent FC/comms/payload
+> ESQ-126-39-G-D (stackthrough) on the adjacent IHU/comms/payload
 > boards. Single GND plane, star-connected at the EPS — no separate
 > analog/digital ground returns.
 
@@ -1092,7 +1092,7 @@ on opposite sides of the board.
 │                              │ H1.43   I2C_SCL             │         │
 │                              │ H1.49   EPS_ALERT_N         │         │
 │                              │           (→ EPS_ALERT_N    │         │
-│                              │            on FC side)      │         │
+│                              │            on IHU side)      │         │
 │                              │ (all other H10 pins reserved)│        │
 │                              └─────────────────────────────┘         │
 │                              [J2 footprint: DNP for prototype]       │
@@ -1141,7 +1141,7 @@ on opposite sides of the board.
 >
 > Convention: **jumper installed = safe/inhibited, jumper pulled =
 > armed/running.** Applies to all three jumpers on this sheet. The
-> `JP1` jumper on the FC board (WDT Disable) uses the same
+> `JP1` jumper on the IHU board (WDT Disable) uses the same
 > convention.
 >
 > See `docs/architecture/inhibit_and_deployment.md` for the full
@@ -1472,7 +1472,7 @@ on Sheet 1.
     signal is later required, swap to TPS62933P.
 11. **Sense resistors**: 10mOhm for both input and charge — sized for 3.2A
     bench flexibility, actual solar current is ~80mA
-12. **I2C level**: DVCC = INTVCC (~5V). FC must be 5V-tolerant or use
+12. **I2C level**: DVCC = INTVCC (~5V). IHU must be 5V-tolerant or use
     level shifter. Open integration item.
 13. **Inhibits & RBF (Sheet 4)**: Three 1×2 pin header jumpers on the
     v0.1 proto board — `JP_RBF` (across R21, kills buck EN midpoint

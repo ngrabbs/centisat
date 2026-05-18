@@ -4,7 +4,7 @@
 
 Define centisat's **power inhibit** and **deployment detect** strategy
 so that the RBF pin, separation switches, post-ejection timer, and
-RF/deployable enable logic are all consistent across the EPS and FC
+RF/deployable enable logic are all consistent across the EPS and IHU
 boards. This is a design-notes stub — the schematic implementation
 will land in `hardware/eps/design/altium_eps_schematic.md` once the
 policy below is locked.
@@ -22,7 +22,7 @@ installed = safe/inhibited, jumper pulled = armed/running.** That is:
 
 | Jumper | Installed (on the bench) | Pulled (for flight-mode testing) |
 |---|---|---|
-| `JP1` WDT Disable (FC board) | Watchdog disabled | Watchdog enabled |
+| `JP1` WDT Disable (IHU board) | Watchdog disabled | Watchdog enabled |
 | `JP_RBF` RBF (EPS board) | Main bus killed | Main bus live |
 | `JP_INH1` Deployment Inhibit #1 (EPS board) | TX + burn-wire inhibited | TX + burn-wire armed |
 | `JP_INH2` Deployment Inhibit #2 (EPS board) | TX + burn-wire inhibited | TX + burn-wire armed |
@@ -50,9 +50,9 @@ that opens a contact (not a closeable header), but the convention
 without a polarity flip, since the pull-pin and the jumper both
 *open the circuit when removed*.
 
-The FC `JP1` jumper is unchanged from its original spec — it is a
+The IHU `JP1` jumper is unchanged from its original spec — it is a
 WDT-disable jumper, **not** an RBF. The earlier "(RBF)" label was
-misleading and has been removed (see task, Section C of the FC
+misleading and has been removed (see task, Section C of the IHU
 schematic doc). Reserve the term "RBF" for the EPS `JP_RBF` pin
 only.
 
@@ -72,7 +72,7 @@ only.
 
 ## Background — why this is its own doc
 
-The existing FC `JP1` labeled "Disable Watchdog (RBF)" is **not** a
+The existing IHU `JP1` labeled "Disable Watchdog (RBF)" is **not** a
 CDS-compliant Remove-Before-Flight pin. It is a bench/flight mode
 jumper for the STWD100 watchdog — useful during bring-up, but it does
 not cut bus power and is not what a range-safety reviewer means by
@@ -135,8 +135,8 @@ WDT jumper.
    - Debounce RC target: ~10 ms. Launch vibration will chatter the
      switches and we do not want to start the 30-min timer on a
      bounce.
-   - `DEPLOY_DETECT` is also routed to the FC via CSKB as
-     `DEPLOY_DETECT_FC` (H1 TBD pin) so the FC can log the
+   - `DEPLOY_DETECT` is also routed to the IHU via CSKB as
+     `DEPLOY_DETECT_FC` (H1 TBD pin) so the IHU can log the
      transition for telemetry.
 
 4. **Post-ejection timer (EPS firmware)**
@@ -186,9 +186,9 @@ WDT jumper.
       RBF + 2× switches as three, or wants an additional firmware
       arm on top, is still open (see below) but does not block
       the proto layout — jumpers are cheap to add.
-- [x] **FC `JP1` label:** drop "(RBF)" everywhere. Rename to
+- [x] **IHU `JP1` label:** drop "(RBF)" everywhere. Rename to
       "WDT Disable (Bench)." Reserve "RBF" for the EPS-side
-      `JP_RBF` only. (Tracked as a separate edit pass on the FC
+      `JP_RBF` only. (Tracked as a separate edit pass on the IHU
       schematic doc.)
 
 ## Still open (does not block v0.1 proto)
@@ -207,10 +207,10 @@ WDT jumper.
       firmware arm too? Confirm with faculty advisor / launch
       provider before flight spin.
 - [ ] **CSKB pin for `DEPLOY_DETECT_FC`** — when we wire the EPS
-      deployment detect net to the FC for telemetry, which H1 pin
+      deployment detect net to the IHU for telemetry, which H1 pin
       does it land on? Open USER pin on H1 is probably cleanest.
       Add to `system/interfaces/cskb_pinmap.md` when chosen. Not
-      needed for v0.1 proto if the FC just polls EPS over I2C for
+      needed for v0.1 proto if the IHU just polls EPS over I2C for
       deployment state instead.
 - [ ] **MRAM layout for latched deployment state + T0 timestamp**
       — needs to coexist with the existing EPS uptime counter and
@@ -225,7 +225,7 @@ WDT jumper.
   `primary_power.kicad_sch` in the RT-IHU repo for how they wire
   their separation switches — they use a single-switch approach,
   which is less conservative than CDS recommends).
-- `hardware/flight_controller/design/altium_flight_controller_schematic.md`
+- `hardware/ihu/design/altium_ihu_schematic.md`
   Section C — current WDT-disable jumper (JP1), to be re-labeled.
 - `hardware/eps/design/altium_eps_schematic.md` — target location
   for the new RBF + separation switch + timer block once policy

@@ -27,7 +27,7 @@ the current architecture baseline.
 ## Interface Assumptions
 
 - System consumers primarily use regulated 5 V and 3.3 V rails
-- EPS telemetry will be consumed by flight-controller firmware
+- EPS telemetry will be consumed by internal housekeeping unit firmware
 - Provisional integration ceiling is 2.0 A per regulated rail until budgets close
 - Protection and fault isolation details will be finalized before release freeze
 
@@ -35,7 +35,7 @@ the current architecture baseline.
 
 - Per-subsystem current allocation table within provisional rail ceilings
 - Power-on sequence and brownout response behavior
-- Rail enable/disable ownership (EPS autonomous vs flight-controller commanded)
+- Rail enable/disable ownership (EPS autonomous vs internal housekeeping unit commanded)
 - Final connector and pin-level interface map
 
 ## Cross-References

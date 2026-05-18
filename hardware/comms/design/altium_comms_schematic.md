@@ -13,7 +13,7 @@ CSKB Stack Connectors (from EPS, H1 signals + H2 power)
      ├── +3V3 ──→ Si5351A, 74LVC1G86, MCP6022, RP2040
      ├── +5V  ──→ SA612, ADL5602
      ├── GND
-     ├── I2C_SCL/SDA ──→ Flight Controller bus
+     ├── I2C_SCL/SDA ──→ Internal Housekeeping Unit bus
      └── VBAT (unused on comms, monitor only)
 
 Si5351A (3-output clock gen, I2C controlled by RP2040)
@@ -82,8 +82,8 @@ symbols** (not net labels) for supply rails so they are global automatically.
 | `+5V` | Power port | 5.0V regulated rail (from EPS via bus) |
 | `GND` | Power port | Ground (global) |
 | `VBAT` | Power port | Unregulated battery bus from EPS (monitor only) |
-| `I2C_SDA` | Net label | I2C data — Si5351A and flight controller bus |
-| `I2C_SCL` | Net label | I2C clock — Si5351A and flight controller bus |
+| `I2C_SDA` | Net label | I2C data — Si5351A and internal housekeeping unit bus |
+| `I2C_SCL` | Net label | I2C clock — Si5351A and internal housekeeping unit bus |
 | `BPSK_DATA` | Net label | RP2040 GPIO to XOR gate data input |
 | `CLK0_OUT` | Net label | Si5351A CLK0 output (145.67 MHz) |
 | `CLK1_OUT` | Net label | Si5351A CLK1 output (145.9 MHz LO) |
@@ -207,7 +207,7 @@ paste a graphic (Place > Drawing Tools > Graphic or import a bitmap/SVG).
 > | Net | Type | Description |
 > |-----|------|-------------|
 > | +3V3, +5V, GND, VBAT | Power port | Supply rails (global) |
-> | I2C_SDA, I2C_SCL | Net label | I2C bus (Si5351A + FC bus) |
+> | I2C_SDA, I2C_SCL | Net label | I2C bus (Si5351A + IHU bus) |
 > | CLK0_OUT, CLK1_OUT | Net label | Si5351A clock outputs |
 > | BPSK_DATA | Net label | RP2040 → XOR modulator |
 > | TX_OUT, RX_IN | Net label | RF paths to SMA connectors |
@@ -1061,13 +1061,13 @@ with its net name.
 | Pico Pin | Net Name | Goes To | Connection |
 |---|---|---|---|
 | GP2 (pin 4) | `BPSK_DATA` | XOR gate pin 2 | BPSK_DATA net label |
-| GP3 (pin 5) | `COMMS_IRQ` | CSKB H1.16 | COMMS_IRQ net label (output, active-low, push-pull, normally high — asserts when RX packet ready or TX status change; FC ISR triggers SPI read) |
+| GP3 (pin 5) | `COMMS_IRQ` | CSKB H1.16 | COMMS_IRQ net label (output, active-low, push-pull, normally high — asserts when RX packet ready or TX status change; IHU ISR triggers SPI read) |
 | GP4 (pin 6) | `I2C_SDA` | Si5351A SDA | I2C_SDA net label |
 | GP5 (pin 7) | `I2C_SCL` | Si5351A SCL | I2C_SCL net label |
-| GP16 (pin 21) | `SPI_COMMS_MISO` | CSKB H1.22 | SPI0 MISO — comms → FC (slave TX) |
-| GP17 (pin 22) | `SPI_COMMS_CS_N` | CSKB H1.24 | SPI0 CSn — slave select from FC |
-| GP18 (pin 24) | `SPI_COMMS_SCK` | CSKB H1.21 | SPI0 SCK — clock from FC |
-| GP19 (pin 25) | `SPI_COMMS_MOSI` | CSKB H1.23 | SPI0 MOSI — FC → comms |
+| GP16 (pin 21) | `SPI_COMMS_MISO` | CSKB H1.22 | SPI0 MISO — comms → IHU (slave TX) |
+| GP17 (pin 22) | `SPI_COMMS_CS_N` | CSKB H1.24 | SPI0 CSn — slave select from IHU |
+| GP18 (pin 24) | `SPI_COMMS_SCK` | CSKB H1.21 | SPI0 SCK — clock from IHU |
+| GP19 (pin 25) | `SPI_COMMS_MOSI` | CSKB H1.23 | SPI0 MOSI — IHU → comms |
 | GP26/ADC0 (pin 31) | `RX_BASEBAND` | MCP6022 output | RX_BASEBAND net label |
 | 3V3 (pin 36) | `+3V3` | Power (from EPS) | +3V3 power port |
 | GND (pins 3,8,13,18,23,28,33,38) | `GND` | Ground | GND power port |
@@ -1195,14 +1195,14 @@ Use whatever free GPIOs are available. Mark as DNP for flight.
 #### Note (Place > Note, next to GP3 / COMMS_IRQ label):
 
 > COMMS_IRQ is a data-ready interrupt from the comms RP2040 to the
-> flight controller, modelled after the AX5043 IRQ pattern in AMSAT
+> internal housekeeping unit, modelled after the AX5043 IRQ pattern in AMSAT
 > RT-IHU. Push-pull output, active-low, normally held high. Comms
 > firmware asserts the line when (a) an RX packet has been fully
 > received and is available in the slave FIFO, or (b) a TX-complete
-> or TX-underrun status needs FC attention. The FC uses a GPIO-EXTI
+> or TX-underrun status needs IHU attention. The IHU uses a GPIO-EXTI
 > ISR to trigger a SPI read transaction; comms de-asserts the line
-> after the FC CS_N drops (or after a firmware-side clear). Do NOT
-> add a pull-up on this board — the FC side (R11 on FC Sheet 4) has
+> after the IHU CS_N drops (or after a firmware-side clear). Do NOT
+> add a pull-up on this board — the IHU side (R11 on IHU Sheet 4) has
 > a 10k pull-up that keeps the line defined while comms is in reset.
 
 ---
@@ -1421,11 +1421,11 @@ comms board and the rest of the CubeSat stack.
 (2.54 mm) pitch, stackthrough through-hole vertical socket. One
 populates the H1 (signals) position, one populates the H2 (power)
 position, for a total of 104 pins per Pumpkin's CSKB layout. Same
-stackthrough variant as the FC board; EPS uses the non-stackthrough
+stackthrough variant as the IHU board; EPS uses the non-stackthrough
 ESQ-126-37-G-D because it is the stack endpoint.
 
 The mating adjacent board's CSKB sockets are the same ESQ-126-39-G-D
-on FC and payload, and ESQ-126-37-G-D on EPS. Default stacking height
+on IHU and payload, and ESQ-126-37-G-D on EPS. Default stacking height
 is 15 mm.
 
 Search Manufacturer Part Search for "ESQ-126-39-G-D" or place a
@@ -1450,14 +1450,14 @@ bus routing for other subsystems.
 
 | Pin | Pumpkin name | centisat net | Direction (Comms) | Function |
 |---|---|---|---|---|
-| H1.16 | `IO.8` | `COMMS_IRQ` | Out | Data-ready interrupt to FC (active-low, push-pull) |
-| H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | In | SPI clock from FC |
-| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | Out | SPI data, comms → FC |
-| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | In | SPI data, FC → comms |
-| H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | In | SPI chip select from FC |
+| H1.16 | `IO.8` | `COMMS_IRQ` | Out | Data-ready interrupt to IHU (active-low, push-pull) |
+| H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | In | SPI clock from IHU |
+| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | Out | SPI data, comms → IHU |
+| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | In | SPI data, IHU → comms |
+| H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | In | SPI chip select from IHU |
 | H1.41 | `SDA_SYS` | `I2C_SDA` | Bidirectional | Shared housekeeping I2C data |
 | H1.43 | `SCL_SYS` | `I2C_SCL` | Bidirectional | Shared housekeeping I2C clock |
-| H1.49 | `USER2` | `EPS_ALERT_N` | (not used on comms) | EPS LTC4162 alert — consumed by FC only |
+| H1.49 | `USER2` | `EPS_ALERT_N` | (not used on comms) | EPS LTC4162 alert — consumed by IHU only |
 | H2.25 | `+5V_SYS` | `+5V` | Power In | 5 V stack rail (from EPS) |
 | H2.26 | `+5V_SYS` | `+5V` | Power In | 5 V (parallel for current sharing) |
 | H2.27 | `VCC_SYS` | `+3V3` | Power In | 3.3 V stack rail (from EPS) |
@@ -1477,11 +1477,11 @@ board.
 > CSKB stack connectors: 2× Samtec ESQ-126-39-G-D (2×26, 0.1″
 > (2.54 mm), stackthrough headers, one each for H1 and H2). Pin
 > assignment locked to the Pumpkin CSKB H1/H2 convention — all
-> boards in the centisat stack (EPS, FC, comms, payload) use the
+> boards in the centisat stack (EPS, IHU, comms, payload) use the
 > same H1/H2 pin numbers for the same signal classes. The comms
 > board is a power CONSUMER on all power pins and a SPI SLAVE to
-> the FC. COMMS_IRQ (H1.16) is driven by the comms RP2040 as a
-> data-ready interrupt to the FC. I2C is shared between EPS
+> the IHU. COMMS_IRQ (H1.16) is driven by the comms RP2040 as a
+> data-ready interrupt to the IHU. I2C is shared between EPS
 > LTC4162 (0x68) and comms Si5351A (0x60) — no address conflict.
 > See `system/interfaces/cskb_pinmap.md` for the full canonical
 > pin map.

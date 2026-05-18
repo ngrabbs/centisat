@@ -37,7 +37,7 @@ matching Pumpkin's layout.
 
 | Role | Boards | Samtec P/N | Type | Stacking height |
 |---|---|---|---|---|
-| Primary (stackable modules) | FC, comms, payload | **ESQ-126-39-G-D** | 52-pin stackthrough, 0.1″ pitch | 15 mm |
+| Primary (stackable modules) | IHU, comms, payload | **ESQ-126-39-G-D** | 52-pin stackthrough, 0.1″ pitch | 15 mm |
 | Endpoint (bottom of stack) | EPS | **ESQ-126-37-G-D** | 52-pin non-stackthrough, 0.1″ pitch | N/A (endpoint) |
 
 **Why this split:** per Pumpkin's footnote on page 17 of the Rev. E
@@ -102,24 +102,24 @@ For each pin, the per-board column shows:
 H1 carries all of centisat's I/O, control, and user signals, plus the
 system I2C bus.
 
-| H1 pin | Pumpkin name | centisat net | EPS | FC | Comms | Payload | Function |
+| H1 pin | Pumpkin name | centisat net | EPS | IHU | Comms | Payload | Function |
 |---|---|---|---|---|---|---|---|
-| H1.16 | `IO.8` | `COMMS_IRQ` | — | C | D | — | Comms data-ready interrupt → FC ISR (push-pull, active-low, normally high) |
-| H1.19 | `IO.5` (URX0) | `UART_DBG_RX` | — | C | — | — | FC debug UART RX (from ground/debug host) |
-| H1.20 | `IO.4` (UTX0) | `UART_DBG_TX` | — | D | — | — | FC debug UART TX (to ground/debug host) |
-| H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | — | D | C | — | SPI clock, FC master → comms slave |
-| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | — | C | D | — | SPI data, comms slave → FC master |
-| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | — | D | C | — | SPI data, FC master → comms slave |
-| H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | — | D | C | — | SPI chip select, FC → comms (active-low) |
+| H1.16 | `IO.8` | `COMMS_IRQ` | — | C | D | — | Comms data-ready interrupt → IHU ISR (push-pull, active-low, normally high) |
+| H1.19 | `IO.5` (URX0) | `UART_DBG_RX` | — | C | — | — | IHU debug UART RX (from ground/debug host) |
+| H1.20 | `IO.4` (UTX0) | `UART_DBG_TX` | — | D | — | — | IHU debug UART TX (to ground/debug host) |
+| H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | — | D | C | — | SPI clock, IHU master → comms slave |
+| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | — | C | D | — | SPI data, comms slave → IHU master |
+| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | — | D | C | — | SPI data, IHU master → comms slave |
+| H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | — | D | C | — | SPI chip select, IHU → comms (active-low) |
 | H1.29 | `-RESET` | `SYS_RESET_N` | R | R | R | R | Stack reset, reserved (no board drives it in v0.1) |
 | H1.31 | `OFF_VCC` | `OFF_VCC` | R | R | R | R | Pumpkin power-control, reserved |
 | H1.41 | `SDA_SYS` | `I2C_SDA` | D/B | B | B | B | Housekeeping I2C data (LTC4162 @ 0x68, Si5351A @ 0x60) |
 | H1.42 | `VBACKUP` | `VBACKUP` | R | R | R | R | RTC/backup domain, reserved (single pin on CSKB) |
 | H1.43 | `SCL_SYS` | `I2C_SCL` | D/B | B | B | B | Housekeeping I2C clock |
-| H1.47 | `USER0` | `COMMS_EN` | — | D | C | — | FC → comms enable (active-high) |
-| H1.48 | `USER1` | `COMMS_FAULT_N` | — | C | D | — | Comms → FC fault indication (open-drain, active-low) |
-| H1.49 | `USER2` | `EPS_ALERT_N` | D | C | — | — | EPS `SMBALERT_N` (LTC4162) → FC alert (open-drain, active-low) |
-| H1.50 | `USER3` | `PAYLOAD_EN` | — | D | — | C | FC → payload enable |
+| H1.47 | `USER0` | `COMMS_EN` | — | D | C | — | IHU → comms enable (active-high) |
+| H1.48 | `USER1` | `COMMS_FAULT_N` | — | C | D | — | Comms → IHU fault indication (open-drain, active-low) |
+| H1.49 | `USER2` | `EPS_ALERT_N` | D | C | — | — | EPS `SMBALERT_N` (LTC4162) → IHU alert (open-drain, active-low) |
+| H1.50 | `USER3` | `PAYLOAD_EN` | — | D | — | C | IHU → payload enable |
 | H1.51 | `USER4` | `CAN_H` | — | B | B | B | CAN bus high (Iteration 2; DNP v0.1) |
 | H1.52 | `USER5` | `CAN_L` | — | B | B | B | CAN bus low (Iteration 2; DNP v0.1) |
 
@@ -135,7 +135,7 @@ the stack.
 H2 carries all of centisat's power rails plus the RBF/Separation
 switches and additional USER pins.
 
-| H2 pin | Pumpkin name | centisat net | EPS | FC | Comms | Payload | Function |
+| H2 pin | Pumpkin name | centisat net | EPS | IHU | Comms | Payload | Function |
 |---|---|---|---|---|---|---|---|
 | H2.25 | `+5V_SYS` | `+5V` | D | C | C | C | Stack 5 V rail (doubled with H2.26 for current sharing) |
 | H2.26 | `+5V_SYS` | `+5V` | D | C | C | C | Stack 5 V rail (parallel) |
@@ -145,13 +145,15 @@ switches and additional USER pins.
 | H2.30 | `DGND` | `GND` | D | C | C | C | Digital ground return |
 | H2.31 | `AGND` | `GND` | D | C | C | C | Analog ground (single pin on CSKB; star-tied to DGND at EPS only) |
 | H2.32 | `DGND` | `GND` | D | C | C | C | Digital ground return (third DGND pin) |
-| H2.45 | `VBATT` | `VBAT` | D | — | M | M | Unregulated battery bus (6.0–8.4 V); monitor-only on non-EPS boards |
-| H2.46 | `VBATT` | `VBAT` | D | — | M | M | Battery bus (parallel) |
+| H2.45 | `VBATT` | `VBAT` | D | — | M | C | Unregulated battery bus (6.0–8.4 V); monitor-only on comms, **consumed by payload** to feed its local 5V buck for the Jetson Orin Nano (stack +5V can't sustain Orin peak current — see Rule 7 below) |
+| H2.46 | `VBATT` | `VBAT` | D | — | M | C | Battery bus (parallel) |
+| H2.47 | `USER6` | `PAYLOAD_FAULT_N` | — | C | — | D | Payload → IHU fault indication (open-drain, active-low). Mirrors `COMMS_FAULT_N` (H1.48) pattern. Driven low by payload on `SHUTDOWN_REQ*` from Orin module (software shutdown, thermal, undervoltage). |
+| H2.48 | `USER7` | `PAYLOAD_SLEEP_REQ_N` | — | D | — | C | IHU → payload sleep request (push-pull, active-low). IHU drives low to request the Orin enter SC7 sleep; payload routes to Orin `SLEEP/WAKE*` (SO-DIMM pin 240). |
 
-All other H2 pins (1–24, 33–44, 47–52) are **reserved** on centisat
+All other H2 pins (1–24, 33–44, 49–52) are **reserved** on centisat
 v0.1 — leave unconnected on every board. They carry Pumpkin-defined
 signals (extra IO.24–IO.47 analog inputs, RBF/Separation switches
-S0–S5 on H2.33–H2.44, USER6–USER11 on H2.47–H2.52).
+S0–S5 on H2.33–H2.44, USER8–USER11 on H2.49–H2.52).
 
 **Note on grounds:** the CSKB has three DGND pins (H2.29, H2.30, H2.32)
 and only one AGND pin (H2.31). Centisat treats all four as a single
@@ -164,40 +166,49 @@ isolated analog ground, revisit this.
 A few nets have two names depending on which board you're looking at —
 both names refer to the same wire:
 
-| CSKB pin | EPS-side name | FC-side name | Notes |
+| CSKB pin | EPS-side name | IHU-side name | Notes |
 |---|---|---|---|
-| H1.49 | `SMBALERT_N` (LTC4162 pin name) | `EPS_ALERT_N` | Same net, renamed at the connector for FC clarity |
+| H1.49 | `SMBALERT_N` (LTC4162 pin name) | `EPS_ALERT_N` | Same net, renamed at the connector for IHU clarity |
 
 ## Rules
 
 1. **New signals** that need to traverse the stack MUST pick a free H1
    or H2 pin from the Pumpkin-reserved list and be added to this table
    before any schematic gets an Altium net label.
-2. **Board-local signals** (e.g., FC-internal SPI to MRAM, comms RF
+2. **Board-local signals** (e.g., IHU-internal SPI to MRAM, comms RF
    nets) MUST NOT appear on any H1/H2 pin.
 3. **Pull resistors** for stack signals live on exactly one board —
    see per-signal notes in each schematic doc. For v0.1:
-   - `COMMS_IRQ` pull-up: FC side (R11, 10 k)
-   - `COMMS_FAULT_N` pull-up: FC side (R13, 10 k)
-   - `EPS_ALERT_N` pull-up: FC side (R12, 10 k)
+   - `COMMS_IRQ` pull-up: IHU side (R11, 10 k)
+   - `COMMS_FAULT_N` pull-up: IHU side (R13, 10 k)
+   - `PAYLOAD_FAULT_N` pull-up: IHU side (10 k)
+   - `EPS_ALERT_N` pull-up: IHU side (R12, 10 k)
    - `I2C_SDA` / `I2C_SCL` pull-ups: EPS side (R4/R5, 4.7 k)
 4. **Power rail bypass** at the connector is placed on BOTH the
-   source (EPS) and the sink (FC/comms/payload). See individual
+   source (EPS) and the sink (IHU/comms/payload). See individual
    schematic docs for Cxx reference designators.
 5. Only the pins listed above need to be wired on any given board. A
    board may omit a CSKB pin if it doesn't use that signal.
 6. **Connector choice** per board:
    - Stack endpoint (EPS in v0.1): `ESQ-126-37-G-D` × 2 (non-stackthrough)
-   - Everything else (FC, comms, payload): `ESQ-126-39-G-D` × 2 (stackthrough)
+   - Everything else (IHU, comms, payload): `ESQ-126-39-G-D` × 2 (stackthrough)
    - 10 mm extension `SSQ-126-22-G-D` only if a specific module needs
      24–25 mm clearance to the next board.
+7. **Payload power exception:** the payload board is the only stack
+   consumer that draws from `VBAT` (H2.45/H2.46) directly rather than
+   from the regulated `+5V` rail. This is because the Jetson Orin Nano
+   peaks at ~3 A on its 5 V input in 15 W mode, which exceeds the stack
+   `+5V` rail provisioning (~2 A nominal). The payload board has its
+   own VBAT→5V buck regulator sized for the Orin's peak current. The
+   payload's `PAYLOAD_EN` (H1.50, IHU-controlled) gates this local buck
+   so the rest of the stack does not see the inrush.
 
 ## Per-board references
 
-- `hardware/flight_controller/design/altium_flight_controller_schematic.md` — FC Sheet 6 (Connectors & Debug)
+- `hardware/ihu/design/altium_ihu_schematic.md` — IHU Sheet 6 (Connectors & Debug)
 - `hardware/eps/design/altium_eps_schematic.md` — EPS Sheet 3 (Connectors & Telemetry)
 - `hardware/comms/design/altium_comms_schematic.md` — Comms Sheet 7 (Connectors)
-- Payload board schematic — TBD
+- `hardware/payload/design/payload_carrier_pinmap.md` — Payload carrier SO-DIMM↔CSKB pin assignments (Jetson Orin Nano)
 
 ## Source of truth
 
@@ -212,3 +223,4 @@ both names refer to the same wire:
 |---|---|---|---|
 | 0.1 | 2026-04-15 | NG | Initial canonical pin map (based on PPM H10 numbering — WRONG, superseded) |
 | 0.2 | 2026-04-15 | NG | Rebuilt against Pumpkin datasheet Rev. E: bus renamed PC/104 → CubeSat Kit Bus (CSKB); pin numbers remapped from H10 (PPM) → H1/H2 (stack bus); connector family corrected to Samtec ESQ-126 (not ESQ-130); split into H1 signal table + H2 power table; added connector options catalog and endpoint-vs-stackthrough guidance |
+| 0.3 | 2026-05-11 | NG / CC | Payload integration: H2.45/H2.46 (`VBAT`) payload column changed `M` → `C` (Orin Nano draws from VBAT, not stack +5V — see Rule 7); allocated H2.47 (`USER6`) = `PAYLOAD_FAULT_N` and H2.48 (`USER7`) = `PAYLOAD_SLEEP_REQ_N`; added `PAYLOAD_FAULT_N` pull-up to Rule 3; added Rule 7 (payload-power exception); pointed Per-board references at `payload_carrier_pinmap.md`. |

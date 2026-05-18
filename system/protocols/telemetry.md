@@ -18,14 +18,14 @@ Define baseline telemetry framing, field mapping, and downlink transport.
 
 - RF downlink framing handled by communications subsystem
 - Inter-board transport:
-  - SPI for FC <-> comms telemetry transfer
+  - SPI for IHU <-> comms telemetry transfer
   - CAN for subsystem status broadcast in Iteration 2
 
 ## Field Groups
 
 - EPS: rail voltages, battery state, charger status, thermal indicators
 - Comms: TX/RX mode, queue depth, fault flags, RSSI-like receive metrics
-- FC: mode state, reset reason, watchdog events, uptime
+- IHU: mode state, reset reason, watchdog events, uptime
 - Payload: status and selected science/experiment metadata
 
 ## Error Control

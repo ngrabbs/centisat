@@ -1,8 +1,8 @@
-# Altium Schematic Instructions — Flight Controller Board
+# Altium Schematic Instructions — Internal Housekeeping Unit Board
 
 ## Design Summary
 
-This board implements the CubeSat's flight-controller (system orchestrator)
+This board implements the CubeSat's internal housekeeping unit (system orchestrator)
 on a single PCB, using a Raspberry Pi Pico (RP2040) module as the MCU. It
 is a power consumer on the CSKB stack — no on-board regulators — and
 acts as command authority, mode-state owner, and telemetry aggregator for
@@ -16,9 +16,9 @@ CubeSat Kit Bus (CSKB) Stack Connectors — H1 (signals) + H2 (power)
      ├── DGND (H2.29/30/32), AGND (H2.31)
      ├── VBATT (H2.45/46) ──→ NOT USED (EPS owns battery telemetry)
      ├── SDA_SYS / SCL_SYS (H1.41/43) ──→ I2C to EPS LTC4162
-     ├── IO.0..IO.3 (H1.24/23/22/21) ──→ SPI0 to Comms RP2040 (FC = master)
+     ├── IO.0..IO.3 (H1.24/23/22/21) ──→ SPI0 to Comms RP2040 (IHU = master)
      ├── IO.4 / IO.5 (H1.20/19) ──→ UART0 debug TX/RX
-     ├── IO.8 (H1.16) ──→ COMMS_IRQ (comms → FC, data-ready)
+     ├── IO.8 (H1.16) ──→ COMMS_IRQ (comms → IHU, data-ready)
      ├── USER0..USER3 (H1.47/48/49/50) ──→ COMMS_EN, COMMS_FAULT_N, EPS_ALERT_N, PAYLOAD_EN
      ├── USER4 / USER5 (H1.51/52) ──→ CAN_H / CAN_L (Iter 2 stub via MAX3051)
      └── -RESET (H1.29) ──→ tied to STWD100 WDO_N and Pico RUN
@@ -26,7 +26,7 @@ CubeSat Kit Bus (CSKB) Stack Connectors — H1 (signals) + H2 (power)
 RP2040 (Raspberry Pi Pico module)
      │
      ├── I2C0 (GP4/GP5) ──→ EPS LTC4162 housekeeping
-     ├── SPI0 (GP16-19) ──→ Comms RP2040 (FC is master)
+     ├── SPI0 (GP16-19) ──→ Comms RP2040 (IHU is master)
      ├── SPI1 (GP10-13) ──→ MR25H40 4Mbit SPI MRAM (persistent state)
      ├── UART0 (GP0/GP1) ──→ Debug header
      ├── GP6  ←── COMMS_IRQ (input, internal pull-up)
@@ -86,13 +86,13 @@ Key design decisions:
    slew resistor selecting 500 kbps (matches RT-IHU). The MCP2515 SPI-CAN
    controller and crystal are NOT populated in v0.1 — footprints reserved
    for Iteration 2.
-8. **EPS owns battery telemetry.** The FC does NOT have its own VBAT
+8. **EPS owns battery telemetry.** The IHU does NOT have its own VBAT
    divider into an ADC pin — it consumes battery voltage and current data
    from the EPS LTC4162 over I2C. VBATT pin on the stack is wired but
    unused on this board.
-9. **FC is SPI master** to the comms board. The comms board's RP2040 is
+9. **IHU is SPI master** to the comms board. The comms board's RP2040 is
    the slave and asserts a `COMMS_IRQ` output when it has a packet ready
-   for the FC. This mirrors AMSAT RT-IHU (`MRAMDev` and `DCTDev` are both
+   for the IHU. This mirrors AMSAT RT-IHU (`MRAMDev` and `DCTDev` are both
    slaves to the IHU MCU; the AX5043 IRQ pin signals the IHU).
 10. **Sheet count is six.** Same flat (non-hierarchical) design as the
     EPS and comms boards — net labels and power ports connect across
@@ -102,7 +102,7 @@ Key design decisions:
 
 ## Altium Project Setup
 
-1. Create a new PCB project: `Flight_Controller_Board.PrjPcb`
+1. Create a new PCB project: `IHU_Board.PrjPcb`
 2. Add six schematic sheets (flat design):
    - `Overview.SchDoc` — title sheet, block diagram, design notes (non-electrical)
    - `MCU_Core.SchDoc` — Pico module, decoupling, status LEDs
@@ -139,29 +139,29 @@ automatically.
 | `+5V_SYS` | Power port | H2.25, H2.26 | 5.0V system rail (from EPS) |
 | `+3V3` | Power port | (Pico-internal LDO output) | 3.3V on-module rail (NOT routed off-module) |
 | `VCC_BUS` | Power port | H2.27, H2.28 | Pumpkin VCC (=3V3 bus rail), reserved, not used in v0.1 |
-| `VBAT` | Power port | H2.45, H2.46 | Battery bus, monitor only — not used on FC |
+| `VBAT` | Power port | H2.45, H2.46 | Battery bus, monitor only — not used on IHU |
 | `GND` | Power port | H2.29, H2.30, H2.32 | Digital ground (global) |
 | `AGND` | Power port | H2.31 | Analog ground, single-point tied to GND (single pin on CSKB) |
 | `VSYS` | Net label | (internal) | Pico VSYS pin, fed from +5V_SYS via Schottky |
 | `I2C_SDA` | Net label | H1.41 (`SDA_SYS`) | I2C data — to EPS LTC4162 |
 | `I2C_SCL` | Net label | H1.43 (`SCL_SYS`) | I2C clock — to EPS LTC4162 |
-| `SPI_COMMS_SCK` | Net label | H1.21 (`IO.3`) | SPI clock to comms board (FC = master) |
-| `SPI_COMMS_MOSI` | Net label | H1.23 (`IO.1`) | SPI data, FC → comms |
-| `SPI_COMMS_MISO` | Net label | H1.22 (`IO.2`) | SPI data, comms → FC |
+| `SPI_COMMS_SCK` | Net label | H1.21 (`IO.3`) | SPI clock to comms board (IHU = master) |
+| `SPI_COMMS_MOSI` | Net label | H1.23 (`IO.1`) | SPI data, IHU → comms |
+| `SPI_COMMS_MISO` | Net label | H1.22 (`IO.2`) | SPI data, comms → IHU |
 | `SPI_COMMS_CS_N` | Net label | H1.24 (`IO.0`) | SPI chip select to comms (active-low) |
-| `COMMS_IRQ` | Net label | H1.16 (`IO.8`) | Comms → FC data-ready interrupt (active-low) |
-| `UART_DBG_TX` | Net label | H1.20 (`IO.4`) | Debug UART TX from FC |
-| `UART_DBG_RX` | Net label | H1.19 (`IO.5`) | Debug UART RX into FC |
-| `COMMS_EN` | Net label | H1.47 (`USER0`) | FC → comms enable (active-high) |
-| `COMMS_FAULT_N` | Net label | H1.48 (`USER1`) | Comms → FC fault (active-low) |
-| `EPS_ALERT_N` | Net label | H1.49 (`USER2`) | EPS → FC SMBus alert (active-low) |
-| `PAYLOAD_EN` | Net label | H1.50 (`USER3`) | FC → payload enable |
+| `COMMS_IRQ` | Net label | H1.16 (`IO.8`) | Comms → IHU data-ready interrupt (active-low) |
+| `UART_DBG_TX` | Net label | H1.20 (`IO.4`) | Debug UART TX from IHU |
+| `UART_DBG_RX` | Net label | H1.19 (`IO.5`) | Debug UART RX into IHU |
+| `COMMS_EN` | Net label | H1.47 (`USER0`) | IHU → comms enable (active-high) |
+| `COMMS_FAULT_N` | Net label | H1.48 (`USER1`) | Comms → IHU fault (active-low) |
+| `EPS_ALERT_N` | Net label | H1.49 (`USER2`) | EPS → IHU SMBus alert (active-low) |
+| `PAYLOAD_EN` | Net label | H1.50 (`USER3`) | IHU → payload enable |
 | `CAN_H` | Net label | H1.51 (`USER4`) | CAN bus high (Iter 2 stub) |
 | `CAN_L` | Net label | H1.52 (`USER5`) | CAN bus low (Iter 2 stub) |
 | `RESET_N` | Net label | H1.29 (`-RESET`) | Stack reset, tied to Pico RUN |
 | `MRAM_SCK` | Net label | (board-local) | SPI1 clock to MR25H40 |
-| `MRAM_MOSI` | Net label | (board-local) | SPI1 data, FC → MRAM |
-| `MRAM_MISO` | Net label | (board-local) | SPI1 data, MRAM → FC |
+| `MRAM_MOSI` | Net label | (board-local) | SPI1 data, IHU → MRAM |
+| `MRAM_MISO` | Net label | (board-local) | SPI1 data, MRAM → IHU |
 | `MRAM_CS_N` | Net label | (board-local) | SPI1 chip select to MRAM |
 | `WDT_FEED` | Net label | (board-local) | Pico → STWD100 WDI |
 | `WDT_RST_N` | Net label | (board-local) | STWD100 WDO_N → Pico RUN (open-drain, active-low) |
@@ -181,10 +181,10 @@ Same convention as the comms board:
 The `+3V3` rail on this board is the **Pico module's on-module 3V3 output**,
 NOT the EPS-supplied `VCC` from the bus connector. This is different
 from the comms board (which taps the EPS +3V3 directly). Reason: the
-FC is small enough that a single Pico module supplies all 3V3 loads on
+IHU is small enough that a single Pico module supplies all 3V3 loads on
 the board (MRAM, WDT, optional CAN transceiver), and we want one well-
 defined source. `VCC_BUS` (Pumpkin H2.27/28) is brought to the connector
-but left unconnected on the FC for v0.1, available for future use if a
+but left unconnected on the IHU for v0.1, available for future use if a
 3V3-hungry peripheral is added later.
 
 ---
@@ -200,14 +200,14 @@ provides context for anyone reviewing or building the design.
 
 Place a large text frame across the top of the sheet:
 
-> **CubeSat Flight Controller Board — RP2040 System Orchestrator**
+> **CubeSat Internal Housekeeping Unit Board — RP2040 System Orchestrator**
 >
 > Project: CentiSat CubeSat — Senior Capstone Design
-> Board: Flight Controller Subsystem, Single PCB
+> Board: Internal Housekeeping Unit Subsystem, Single PCB
 > Designer: Nick Grabbs / K15Y NG
 > Revision: 0.1
 > Date: (today)
-> Repository: centisat/hardware/flight_controller
+> Repository: centisat/hardware/ihu
 
 ### Text Frame 2: System Block Diagram (Center of Sheet)
 
@@ -248,7 +248,7 @@ Place a large text frame across the top of the sheet:
 │                                                                          │
 │  ┌─── Interfaces (broken out on sheet 4) ──────────────────────┐        │
 │  │  I2C  → EPS (housekeeping)                                  │        │
-│  │  SPI0 → Comms (data, FC = master)                           │        │
+│  │  SPI0 → Comms (data, IHU = master)                           │        │
 │  │  IRQ  ← Comms (data-ready)                                  │        │
 │  │  UART → Debug header / CSKB                                │        │
 │  │  CAN  → MAX3051 transceiver stub (Iter 2)                   │        │
@@ -267,8 +267,8 @@ Place a large text frame across the top of the sheet:
 > | +5V_SYS | EPS via CSKB (H2.25, H2.26) | 5.0V ±2% | Pico VSYS (via Schottky) |
 > | +3V3 | Pico on-module LDO output | 3.3V ±2% | MR25H40, STWD100, MAX3051 (Iter 2), pull-ups, LEDs |
 > | GND | EPS via CSKB (H2.29, H2.30, H2.32) | 0V | All |
-> | VBAT | EPS via CSKB (H2.45, H2.46) | 6.0–8.4V | Not used on FC (EPS owns battery telemetry) |
-> | VCC_BUS | EPS via CSKB (H2.27, H2.28) | 3.3V (bus) | Reserved, unconnected on FC v0.1 |
+> | VBAT | EPS via CSKB (H2.45, H2.46) | 6.0–8.4V | Not used on IHU (EPS owns battery telemetry) |
+> | VCC_BUS | EPS via CSKB (H2.27, H2.28) | 3.3V (bus) | Reserved, unconnected on IHU v0.1 |
 >
 > **Estimated current budget (3V3, all on-module):**
 > RP2040 active: ~30 mA
@@ -294,7 +294,7 @@ Place a large text frame across the top of the sheet:
 > | +5V_SYS, +3V3, GND, VBAT | Power port | Supply rails (global) |
 > | I2C_SDA, I2C_SCL | Net label | I2C to EPS LTC4162 |
 > | SPI_COMMS_* | Net label | SPI bus to comms board (4 nets) |
-> | COMMS_IRQ | Net label | Comms→FC data-ready |
+> | COMMS_IRQ | Net label | Comms→IHU data-ready |
 > | MRAM_* | Net label | SPI bus to MR25H40 (4 nets, board-local) |
 > | UART_DBG_TX, UART_DBG_RX | Net label | Debug UART |
 > | COMMS_EN, COMMS_FAULT_N, EPS_ALERT_N, PAYLOAD_EN | Net label | Discrete control/fault GPIOs |
@@ -314,9 +314,9 @@ Place a large text frame across the top of the sheet:
 > 5. No on-board RTC — uptime counter in MRAM, ground-synced
 > 6. CSKB pin map adopted verbatim from Pumpkin CubeSat Kit Bus spec for
 >    interoperability with commercial Pumpkin/iSpace boards
-> 7. FC is SPI master to comms; COMMS_IRQ signals data-ready
+> 7. IHU is SPI master to comms; COMMS_IRQ signals data-ready
 > 8. CAN stubbed only in v0.1 (MAX3051 transceiver footprint reserved)
-> 9. EPS owns battery telemetry — FC has no on-board VBAT divider
+> 9. EPS owns battery telemetry — IHU has no on-board VBAT divider
 > 10. Flat schematic design — nets connect by name across sheets
 
 ### Text Frame 6: Sheet Index (Right Edge)
@@ -349,7 +349,7 @@ Place a large text frame across the top of the sheet:
    - Use Place > Drawing Tools > Line/Rectangle to draw boxes and arrows
    - Import a PNG/SVG of the block diagram (Place > Drawing Tools > Graphic)
 4. No electrical components, no nets, no power ports on this sheet
-5. Set the title block: "CubeSat FC Board — Overview", Rev 0.1
+5. Set the title block: "CubeSat IHU Board — Overview", Rev 0.1
 
 ---
 ---
@@ -433,7 +433,7 @@ name.
 > let it feed MRAM (U2), STWD100 (U3), MAX3051 (U4, DNP), pull-ups,
 > and LEDs. Pin 37 (3V3_EN) is tied to 3V3 OUT to keep the internal
 > regulator always enabled. **Do NOT** connect 3V3 OUT to the bus
-> connector's VCC pin (H2.27/28) — those remain unconnected on FC
+> connector's VCC pin (H2.27/28) — those remain unconnected on IHU
 > v0.1. Do NOT connect VBUS (pin 40) to anything on the board; the
 > Pico's own Micro-USB supplies VBUS when plugged in for programming.
 
@@ -484,7 +484,7 @@ GP21 ── R3 (330Ω) ── D3 (Red) ── GND         ; fault
 > driven by GPIOs and only consume current when on, so they can stay
 > populated for flight. The mode FSM should toggle D2 at 1 Hz in
 > Nominal mode and at 0.25 Hz in Safe mode so a glance at the LED
-> tells you the FC's state.
+> tells you the IHU's state.
 
 ---
 
@@ -672,7 +672,7 @@ JP1 pin 2 ── EN_N│  WDO_N ─┘
 > WDT timeout → WDO_N → RUN low → RP2040 reboot → boot enters Safe
 > mode → MCU re-enables watchdog feed → exits Safe mode after EPS
 > I2C and comms SPI heartbeats valid (per
-> `hardware/flight_controller/design/overview.md`).
+> `hardware/ihu/design/overview.md`).
 
 ---
 
@@ -789,7 +789,7 @@ Connectors sheet.
 ### Text Frame (Place > Text Frame, top of sheet):
 
 > INTERFACES — Off-board signal conditioning. I2C bus to EPS LTC4162
-> (housekeeping telemetry), SPI bus to comms RP2040 (FC = master),
+> (housekeeping telemetry), SPI bus to comms RP2040 (IHU = master),
 > UART debug to CSKB backplane / debug header, discrete control
 > and fault GPIOs, and MAX3051 CAN transceiver stub for Iteration 2.
 > All nets here are 3.3V CMOS — no level shifting required because
@@ -801,7 +801,7 @@ Connectors sheet.
 ### Section A: I2C Bus to EPS (Top-Left)
 
 The EPS board already has its own I2C pull-ups for the LTC4162 (per
-`hardware/eps/design/altium_eps_schematic.md`). The FC's role on this
+`hardware/eps/design/altium_eps_schematic.md`). The IHU's role on this
 bus is master, so we do NOT add a second set of pull-ups here unless
 the EPS pull-ups prove inadequate during bring-up. Reserve footprints
 for optional pull-ups.
@@ -820,18 +820,18 @@ for optional pull-ups.
 > if bring-up shows weak edges or marginal timing — but if you do,
 > coordinate with the EPS to avoid excessive parallel pull-up. The
 > shared bus runs at 400 kHz fast mode (per
-> `hardware/flight_controller/design/interfaces.md`).
+> `hardware/ihu/design/interfaces.md`).
 
 ---
 
 ### Section B: SPI to Comms (Top-Right)
 
-Four-wire SPI plus a dedicated interrupt line. FC is master.
+Four-wire SPI plus a dedicated interrupt line. IHU is master.
 
 #### Pull-up on COMMS_IRQ
 
 The comms RP2040 drives `COMMS_IRQ` as an open-drain or push-pull
-output. For interoperability, the FC adds a pull-up so the line is
+output. For interoperability, the IHU adds a pull-up so the line is
 defined whenever the comms board is unpowered.
 
 | Ref | Value | Package | Connection | Purpose |
@@ -848,9 +848,9 @@ COMMS_IRQ       ←── comms board (CSKB H1.16, IO.8)   + R11 pull-up to +3V3
 
 #### Note (Place > Note):
 
-> SPI bus to comms board. FC is master, comms RP2040 is slave. Mode
+> SPI bus to comms board. IHU is master, comms RP2040 is slave. Mode
 > 0 (CPOL=0, CPHA=0), 4–8 MHz initial range per
-> `hardware/flight_controller/design/interfaces.md`. `COMMS_IRQ`
+> `hardware/ihu/design/interfaces.md`. `COMMS_IRQ`
 > mirrors the AMSAT RT-IHU pattern where the AX5043 radio asserts
 > its IRQ line back to the housekeeping unit when a packet is ready
 > (see `/workspace/AMSAT/rt-ihu/drivers/inc/spiDriver.h`).
@@ -881,7 +881,7 @@ labeled and brought to the appropriate connector pins.
 #### Note (Place > Note):
 
 > Debug UART is intentionally exposed on BOTH the bench debug header
-> AND the CSKB backplane so you can leave the FC in the stack and
+> AND the CSKB backplane so you can leave the IHU in the stack and
 > still sniff its console via an adjacent dev board. Default baud
 > 115200 8N1. The Pico's USB-CDC console (over the on-module
 > Micro-USB) is the primary debug channel; this UART is the
@@ -905,20 +905,20 @@ defined state when the peer board is absent or unpowered.
 
 The output enables (`COMMS_EN`, `PAYLOAD_EN`) are active-high outputs
 driven by the Pico — no pull-down is added so the lines float low at
-power-on (peer boards see "disabled" until FC firmware drives them
+power-on (peer boards see "disabled" until IHU firmware drives them
 high). The Pico's GPIOs are tri-stated at reset, but with the peer
 board's own input pull-down (or its own enable strap), this is safe.
 
 #### Note (Place > Note):
 
 > Active-low fault inputs (`COMMS_FAULT_N`, `EPS_ALERT_N`) are pulled
-> high through 10 kΩ so the FC sees "no fault" when the peer board
+> high through 10 kΩ so the IHU sees "no fault" when the peer board
 > is removed, in reset, or unpowered — fail-safe direction. The
 > active-high enable outputs (`COMMS_EN`, `PAYLOAD_EN`) intentionally
 > float low at power-on so peer boards default to disabled until
-> the FC explicitly enables them. This means EPS LTC4162 alert
+> the IHU explicitly enables them. This means EPS LTC4162 alert
 > (`EPS_ALERT_N`) is wired here **independently** from the I2C bus —
-> it lets the EPS interrupt the FC without requiring a polled I2C
+> it lets the EPS interrupt the IHU without requiring a polled I2C
 > read.
 
 ---
@@ -942,7 +942,7 @@ This pattern matches AMSAT RT-IHU's MAX3051 transceiver on
 | C8 | 100nF, 16V, X7R | 0402 | U4 VCC to GND | DNP in v0.1 |
 | R14 | 0Ω | 0402 | U4 RS pin to R15 | DNP, sets slew |
 | R15 | 24 kΩ, 1% | 0402 | R14 to GND | DNP, selects 500 kbps slew |
-| R16 | 120Ω, 1%, 1/4W | 0805 | `CAN_H` to `CAN_L` | DNP, bus termination (only populate if FC is at the physical end of the CAN bus) |
+| R16 | 120Ω, 1%, 1/4W | 0805 | `CAN_H` to `CAN_L` | DNP, bus termination (only populate if IHU is at the physical end of the CAN bus) |
 
 #### MAX3051 Pin-by-Pin (when populated)
 
@@ -986,8 +986,8 @@ R16 (120Ω, DNP) is the optional bus termination
 > controller (footprint to be added on a v0.2 schematic update,
 > since we want to keep v0.1 small) and populate U4 + R14/R15 to
 > bring the CAN node online. R16 (120Ω termination) only populates
-> if the FC sits at the physical end of the CAN bus topology —
-> typical CubeSat layout puts FC at one end and EPS or comms at
+> if the IHU sits at the physical end of the CAN bus topology —
+> typical CubeSat layout puts IHU at one end and EPS or comms at
 > the other. The 24 kΩ slew resistor selecting 500 kbps matches
 > AMSAT RT-IHU `R14`/`R30` on the comm_mem sheet.
 >
@@ -1019,7 +1019,7 @@ R16 (120Ω, DNP) is the optional bus termination
 │   U4 MAX3051 (DNP)                                                   │
 │   C8 (DNP)                                                           │
 │   R14, R15 slew network (DNP)                                        │
-│   R16 termination (DNP, only if FC at bus end)                       │
+│   R16 termination (DNP, only if IHU at bus end)                       │
 │   CAN_H, CAN_L → CSKB H1.51/52                                       │
 │                                                                      │
 └──────────────────────────────────────────────────────────────────────┘
@@ -1047,7 +1047,7 @@ regulators — the Pico's internal LDO produces all 3V3 on the board.
 
 ### Text Frame (Place > Text Frame, top of sheet):
 
-> POWER DISTRIBUTION — The flight controller receives +5V_SYS from
+> POWER DISTRIBUTION — The internal housekeeping unit receives +5V_SYS from
 > the EPS via the CSKB stack connectors (H2.25/26). A Schottky diode isolates
 > the stack +5V from the Pico's USB VBUS so the Pico can run from
 > either source without back-feeding. The Pico's on-module buck-boost
@@ -1106,7 +1106,7 @@ HF bypass.
 > (1.8–5.5 V). Same pattern as the comms board's D5 (see
 > `hardware/comms/design/altium_comms_schematic.md` Sheet 6, Section C).
 >
-> SS14 (1A/40V, SMA) is overkill for the FC's ~30 mA draw but it's
+> SS14 (1A/40V, SMA) is overkill for the IHU's ~30 mA draw but it's
 > a JLCPCB basic part and matches the comms board, so reuse it.
 
 ---
@@ -1169,14 +1169,14 @@ since that's where +3V3 actually originates.)
 This sheet holds the CSKB stack connectors H1 and H2 (using the
 Pumpkin CubeSat Kit Bus pin map verbatim), the bench debug header,
 the spare-GPIO header, and the connector-side bypass caps. It is the
-physical interface between the FC and the rest of the CubeSat stack.
+physical interface between the IHU and the rest of the CubeSat stack.
 
 ### Text Frame (Place > Text Frame, top of sheet):
 
 > CONNECTORS & DEBUG — CSKB stack connectors (H1 for signals, H2 for
 > power) for inter-board power and signal distribution (Pumpkin CSKB
 > pin map), bench debug header for UART + SWD probe access, and
-> spare-GPIO header for unused Pico pins. The FC is a power CONSUMER
+> spare-GPIO header for unused Pico pins. The IHU is a power CONSUMER
 > on the +5V_SYS rail. The H1/H2 pin numbers below are taken verbatim
 > from the Pumpkin CubeSat Kit Motherboard Rev. E datasheet
 > (`DS_CSK_MB_710-00484-E.pdf`, doc Rev. A, March 2012), pages 13–16,
@@ -1192,7 +1192,7 @@ physical interface between the FC and the rest of the CubeSat stack.
 **Part: 2× Samtec ESQ-126-39-G-D** — 2×26 (52-pin) each, 0.1″ (2.54 mm)
 pitch, stackthrough through-hole vertical socket. One part populates
 the H1 (signal) position, one populates the H2 (power) position, for
-a total of 104 pins per Pumpkin's CSKB layout. The FC uses the
+a total of 104 pins per Pumpkin's CSKB layout. The IHU uses the
 **stackthrough** variant (ESQ-126-39-G-D) because it is not the stack
 endpoint — the EPS is the endpoint and uses the non-stackthrough
 ESQ-126-37-G-D instead. Default stacking height is 15 mm.
@@ -1220,14 +1220,14 @@ Samtec MPN in the component properties.
 > conflict, the canonical file wins — update this table, not the
 > canonical file.
 
-| Pin | Pumpkin name | centisat net | Direction (FC) | Function |
+| Pin | Pumpkin name | centisat net | Direction (IHU) | Function |
 |---|---|---|---|---|
 | H1.16 | `IO.8` | `COMMS_IRQ` | In | Comms data-ready interrupt (active-low) |
 | H1.19 | `IO.5` (URX0) | `UART_DBG_RX` | In | Debug UART RX |
 | H1.20 | `IO.4` (UTX0) | `UART_DBG_TX` | Out | Debug UART TX |
 | H1.21 | `IO.3` (SCK0) | `SPI_COMMS_SCK` | Out | SPI clock to comms |
-| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | In | SPI data, comms → FC |
-| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | Out | SPI data, FC → comms |
+| H1.22 | `IO.2` (SDI0) | `SPI_COMMS_MISO` | In | SPI data, comms → IHU |
+| H1.23 | `IO.1` (SDO0) | `SPI_COMMS_MOSI` | Out | SPI data, IHU → comms |
 | H1.24 | `IO.0` (-CS_SD) | `SPI_COMMS_CS_N` | Out | SPI chip select to comms |
 | H1.29 | `-RESET` | `RESET_N` | Bidirectional | Stack reset, tied to Pico RUN via Memory_WDT WDT_RST_N path |
 | H1.41 | `SDA_SYS` | `I2C_SDA` | Bidirectional | Shared I2C data |
@@ -1247,9 +1247,9 @@ Samtec MPN in the component properties.
 | H2.30 | `DGND` | `GND` | Power | (parallel) |
 | H2.31 | `AGND` | `AGND` | Power | Analog ground, single-point tied to GND (single pin on CSKB) |
 | H2.32 | `DGND` | `GND` | Power | Ground return (third DGND pin) |
-| H2.45 | `VBATT` | `VBAT` | (monitor only, NC on FC) | Battery bus |
-| H2.46 | `VBATT` | `VBAT` | (NC on FC) | (parallel) |
-| (other H1/H2 pins) | — | (NC on FC) | — | Reserved for future use |
+| H2.45 | `VBATT` | `VBAT` | (monitor only, NC on IHU) | Battery bus |
+| H2.46 | `VBATT` | `VBAT` | (NC on IHU) | (parallel) |
+| (other H1/H2 pins) | — | (NC on IHU) | — | Reserved for future use |
 
 #### Note (Place > Note, next to CSKB connectors):
 
@@ -1260,10 +1260,10 @@ Samtec MPN in the component properties.
 > electrical role as the corresponding Pumpkin CSKB pin, so a future
 > swap-in of a Pumpkin MBM2 or Pumpkin EPS board would Just Work
 > mechanically and electrically. Pins not listed in the table above
-> are NC on the FC v0.1 and remain available for future expansion.
+> are NC on the IHU v0.1 and remain available for future expansion.
 >
 > The SD-card SPI lines (`IO.0..IO.3` on Pumpkin) are repurposed here
-> as the FC-to-comms SPI bus. Same electrical role (SPI master),
+> as the IHU-to-comms SPI bus. Same electrical role (SPI master),
 > different downstream peer — Pumpkin uses these to talk to an
 > on-board SD card socket; we use them to talk to the comms RP2040.
 > Future Pumpkin compatibility is preserved because the CSKB
@@ -1273,7 +1273,7 @@ Samtec MPN in the component properties.
 > `EPS_ALERT_N` (H1.49) is a centisat-specific addition mapped onto
 > Pumpkin's `USER2` pin. EPS LTC4162's SMBALERT_N from the EPS Sheet 1
 > is wired to this same H1 pin on the EPS board, so the line runs
-> straight through the stack without any FC-side translation.
+> straight through the stack without any IHU-side translation.
 
 #### Bulk Bypass at Stack Connector
 
@@ -1288,7 +1288,7 @@ Same convention as the comms board.
 #### Note (Place > Note, next to bypass caps):
 
 > Connector-side bypass on `+5V_SYS` only. We do NOT add bypass on
-> `VCC_BUS` (Pumpkin VCC / 3V3 bus) because the FC does not consume
+> `VCC_BUS` (Pumpkin VCC / 3V3 bus) because the IHU does not consume
 > from that rail in v0.1 — the Pico generates its own 3V3. If a
 > future revision adds a VCC_BUS load, add receiving caps then.
 
@@ -1490,14 +1490,14 @@ On each sheet, double-click the title block and fill in:
 
 | Field | Sheet 1 | Sheet 2 | Sheet 3 |
 |---|---|---|---|
-| Title | FC — Overview | FC — MCU Core | FC — Memory & WDT |
+| Title | IHU — Overview | IHU — MCU Core | IHU — Memory & WDT |
 | Revision | 0.1 | 0.1 | 0.1 |
 | Drawn By | Nick Grabbs / K15Y NG | Nick Grabbs / K15Y NG | Nick Grabbs / K15Y NG |
 | Date | (today) | (today) | (today) |
 
 | Field | Sheet 4 | Sheet 5 | Sheet 6 |
 |---|---|---|---|
-| Title | FC — Interfaces | FC — Power | FC — Connectors & Debug |
+| Title | IHU — Interfaces | IHU — Power | IHU — Connectors & Debug |
 | Revision | 0.1 | 0.1 | 0.1 |
 | Drawn By | Nick Grabbs / K15Y NG | Nick Grabbs / K15Y NG | Nick Grabbs / K15Y NG |
 | Date | (today) | (today) | (today) |
@@ -1505,7 +1505,7 @@ On each sheet, double-click the title block and fill in:
 ### 4. Export PDF
 
 File > Smart PDF (or File > Print > PDF).
-Save to `hardware/flight_controller/releases/FC_schematic_v0.1.pdf`
+Save to `hardware/ihu/releases/FC_schematic_v0.1.pdf`
 for review.
 
 ---
@@ -1557,7 +1557,7 @@ for review.
 | R13 | 10 kΩ, 1% | 0402 | EPS_ALERT_N idle pull-up |
 | R14 | 0 Ω | 0402 | MAX3051 RS slew, **DNP in v0.1** |
 | R15 | 24 kΩ, 1% | 0402 | MAX3051 RS slew (500 kbps), **DNP in v0.1** |
-| R16 | 120 Ω, 1%, 1/4W | 0805 | CAN bus termination, **DNP** unless FC at bus end |
+| R16 | 120 Ω, 1%, 1/4W | 0805 | CAN bus termination, **DNP** unless IHU at bus end |
 
 ### Sheet 5: Power
 
@@ -1592,7 +1592,7 @@ Wait — recount populated resistors:
 - 3 connectors + 1 jumper: J1, J2, J3, JP1
 - 16 test points
 
-Total populated component count: ~38 parts (very compact for a flight controller)
+Total populated component count: ~38 parts (very compact for a internal housekeeping unit)
 Total board area target: <50 cm² (CSKB / CubeSat Kit footprint is the constraint)
 
 ---
@@ -1602,9 +1602,9 @@ Total board area target: <50 cm² (CSKB / CubeSat Kit footprint is the constrain
 1. **Comms board v0.2 update required.** Add `COMMS_IRQ` to the comms
    board's Digital_Control sheet (pick one Pico GPIO, e.g. GP22) and
    route it to CSKB H1.16 on the Connectors sheet. One-line update
-   to `system/interfaces/comms_to_fc.md` to document the signal.
+   to `system/interfaces/comms_to_ihu.md` to document the signal.
 2. **EPS board v0.2 follow-up.** The EPS LTC4162 SMBALERT_N must route
-   to CSKB H1.49 (Pumpkin USER2) so it lands on the FC's
+   to CSKB H1.49 (Pumpkin USER2) so it lands on the IHU's
    `EPS_ALERT_N` net. Verify the EPS schematic reflects this when next
    touched.
 3. **CSKB connector layout.** v0.1 uses 2× Samtec ESQ-126-39-G-D
@@ -1620,7 +1620,7 @@ Total board area target: <50 cm² (CSKB / CubeSat Kit footprint is the constrain
    GP14/GP15 to it. Plan to populate U4 (MAX3051) and the slew
    network at the same time.
 5. **Bring-up plan reference.** See
-   `hardware/flight_controller/bringup/phase1_validation.md` for the
+   `hardware/ihu/bringup/phase1_validation.md` for the
    phase-1 acceptance procedure. Key checks: power-on with WDT
    disabled, then power-on with WDT enabled (verify 1 Hz feed), then
    I2C read of LTC4162, then SPI loopback to comms.

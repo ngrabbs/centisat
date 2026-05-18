@@ -1,9 +1,9 @@
-# Flight Controller Firmware Roadmap
+# Internal Housekeeping Unit Firmware Roadmap
 
 ## Purpose
 
 Track firmware architecture and implementation milestones for the RP2040-based
-flight controller.
+internal housekeeping unit.
 
 ## Core Responsibilities
 
@@ -26,7 +26,7 @@ flight controller.
 ### Workstream B: Interface Drivers and Link Management
 
 - [ ] Implement EPS housekeeping I2C client
-- [ ] Implement FC-comms SPI packet transport with CRC and sequence counter
+- [ ] Implement IHU-comms SPI packet transport with CRC and sequence counter
 - [ ] Implement link heartbeat and timeout handling
 - [ ] Add CAN transport abstraction for Iteration 2
 
@@ -45,12 +45,12 @@ flight controller.
 
 ## Phase 1 Exit Criteria
 
-- [ ] FC boots to deterministic safe state and reports reset reason
+- [ ] IHU boots to deterministic safe state and reports reset reason
 - [ ] Stable I2C polling and SPI packet exchange with bounded retry behavior
 - [ ] Command/telemetry loop closes with reproducible test results
 
 ## Related Documents
 
-- FC hardware architecture: `hardware/flight_controller/design/overview.md`
-- FC interfaces: `hardware/flight_controller/design/interfaces.md`
-- FC bring-up tests: `hardware/flight_controller/bringup/phase1_validation.md`
+- IHU hardware architecture: `hardware/ihu/design/overview.md`
+- IHU interfaces: `hardware/ihu/design/interfaces.md`
+- IHU bring-up tests: `hardware/ihu/bringup/phase1_validation.md`

@@ -1,8 +1,8 @@
-# Flight Controller Architecture Overview
+# Internal Housekeeping Unit Architecture Overview
 
 ## Scope
 
-This document defines the baseline architecture for the flight-controller board
+This document defines the baseline architecture for the internal housekeeping unit board
 that coordinates EPS, communications, and payload behavior.
 
 ## System Role
@@ -17,7 +17,7 @@ that coordinates EPS, communications, and payload behavior.
 - MCU: RP2040
 - Primary board interfaces:
   - I2C for EPS housekeeping telemetry
-  - SPI for FC <-> comms bidirectional data exchange
+  - SPI for IHU <-> comms bidirectional data exchange
   - UART for debug and bring-up
 - Planned Iteration 2 interface:
   - CAN control-plane network via external CAN controller/transceiver
@@ -25,12 +25,12 @@ that coordinates EPS, communications, and payload behavior.
 ## Functional Block View
 
 ```text
-Uplink Command (via Comms) -> FC Command Parser/Dispatcher
+Uplink Command (via Comms) -> IHU Command Parser/Dispatcher
                                    -> EPS control/monitor path
                                    -> Comms mode + queue control
                                    -> Payload control path
 
-Subsystem Telemetry -> FC Aggregator -> Downlink Packet Assembly -> Comms TX
+Subsystem Telemetry -> IHU Aggregator -> Downlink Packet Assembly -> Comms TX
 ```
 
 ## Runtime Behavior (Design Intent)
@@ -59,7 +59,7 @@ Subsystem Telemetry -> FC Aggregator -> Downlink Packet Assembly -> Comms TX
 
 - Deterministic command handling with bounded retries/timeouts
 - Fault containment and graceful degradation
-- Clear ownership boundaries between FC and subsystem controllers
+- Clear ownership boundaries between IHU and subsystem controllers
 - Testable interfaces with measurable acceptance criteria
 
 ## Open Decisions
@@ -71,6 +71,6 @@ Subsystem Telemetry -> FC Aggregator -> Downlink Packet Assembly -> Comms TX
 
 ## Related Documents
 
-- FC interfaces: `hardware/flight_controller/design/interfaces.md`
-- FC bring-up plan: `hardware/flight_controller/bringup/phase1_validation.md`
+- IHU interfaces: `hardware/ihu/design/interfaces.md`
+- IHU bring-up plan: `hardware/ihu/bringup/phase1_validation.md`
 - System interconnect plan: `system/interfaces/board_to_board.md`
